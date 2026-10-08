@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Styrke">
+<title>Styrke</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
+<style>
+:root{--surface-0:#f5f4ef;--surface-1:#ecebe5;--surface-2:#fff;--border:rgba(0,0,0,.1);--border-strong:rgba(0,0,0,.2);--border-accent:#85B7EB;--text-primary:#141413;--text-secondary:#5f5e5a;--text-muted:#9a9893;--text-accent:#185FA5;--text-success:#3B6D11;--text-danger:#A32D2D;--text-warning:#854F0B;--bg-accent:#E6F1FB;--bg-danger:#FCEBEB;--bg-success:#EAF3DE;--fill-accent:#185FA5;--on-accent:#fff;--radius:8px;--font-mono:ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root{--surface-0:#1a1a19;--surface-1:#262624;--surface-2:#30302e;--border:rgba(255,255,255,.12);--border-strong:rgba(255,255,255,.24);--border-accent:#378ADD;--text-primary:#f5f4ef;--text-secondary:#b4b2a9;--text-muted:#888780;--text-accent:#85B7EB;--text-success:#97C459;--text-danger:#F09595;--text-warning:#EF9F27;--bg-accent:#0C447C;--bg-danger:#501313;--bg-success:#173404;--fill-accent:#378ADD}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--surface-0);color:var(--text-primary);font-family:-apple-system,system-ui,sans-serif;font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+main{max-width:480px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom))}
+button{font:inherit;font-size:14px;color:var(--text-primary);background:transparent;border:0.5px solid var(--border-strong);border-radius:var(--radius);height:40px;padding:0 12px;cursor:pointer}
+button:active{transform:scale(.98)}
+input,textarea{font:inherit;font-size:16px;color:var(--text-primary);background:var(--surface-2);border:0.5px solid var(--border-strong);border-radius:var(--radius);height:36px;padding:0 10px}
+textarea{height:auto;padding:8px}
+input:focus,textarea:focus{outline:none;border-color:var(--border-accent)}
+.cd{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:1rem;margin:0 0 12px}
+.mu{color:var(--text-secondary);font-size:13px}
+.r{display:flex;align-items:center;gap:8px}
+.sb{justify-content:space-between}
+.ch{font-size:12px;padding:3px 10px;border-radius:var(--radius);background:var(--bg-accent);color:var(--text-accent);white-space:nowrap}
+.pr{width:100%;height:50px;border:none;background:var(--fill-accent);color:var(--on-accent);font-size:16px;font-weight:500;border-radius:var(--radius)}
+.st button{width:40px;height:44px;flex:none;padding:0;font-size:18px}
+.st input{text-align:center;font-size:18px;height:44px;width:100%;min-width:0;padding:0 4px}
+.on{background:var(--bg-accent)!important;color:var(--text-accent)!important;border-color:var(--border-accent)!important}
+.bar{height:6px;background:var(--surface-1);border-radius:3px;overflow:hidden}
+.bar>div{height:100%;background:var(--fill-accent)}
+.li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:0.5px solid var(--border);font-size:14px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.mt{background:var(--surface-1);border-radius:var(--radius);padding:.75rem 1rem}
+</style>
+</head>
+<body>
+<main>
+<h1 style="font-size:22px;font-weight:500;margin:4px 0 12px">Styrke</h1>
+<div id="app"></div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const W1=[[0,10],[.6,5],[.8,3],[.9,1]];
+const P=[
+{n:'Overkropp tung',fin:'Romaskin',ex:[
+{id:'bench',n:'Benkpress',t:'top',top:[4,6],bo:3,boR:[6,8],rest:150,bar:1,def:60,warm:W1,alts:['Manualpress flat','Smith-benkpress','Chest press-maskin']},
+{id:'pull',n:'Vektet pull-ups',t:'top',top:[5,6],bo:2,boR:[8,8],rest:150,add:1,inc:2.5,def:0,warm:[[-1,5]],alts:['Nedtrekk','Assistert pull-up']},
+{id:'incdb',n:'Skrå manualpress',t:'w',sets:3,r:[8,10],rest:90,ss:'A',inc:2,def:24,alts:['Skrå Smith-press','Skrå maskinpress']},
+{id:'csrow',n:'Brystsupportert roing',t:'w',sets:3,r:[10,12],rest:90,ss:'A',inc:2.5,def:40,alts:['Kabelroing','Maskinroing']}]},
+{n:'Underkropp tung',fin:'Sykkel',ex:[
+{id:'squat',n:'Knebøy',t:'top',top:[4,6],bo:3,boR:[6,6],rest:180,bar:1,def:80,warm:W1,alts:['Hack squat','Beinpress']},
+{id:'rdl',n:'Rumensk markløft',t:'w',sets:3,r:[6,8],rest:120,bar:1,def:70,warm:[[.6,5]],alts:['Hantel-RDL','Liggende leg curl']},
+{id:'bulg',n:'Bulgarske utfall',t:'w',sets:3,r:[8,10],rest:90,ss:'A',inc:2,def:16,alts:['Gående utfall','Step-ups']},
+{id:'hlr',n:'Hengende beinhev',t:'w',sets:3,r:[10,12],rest:90,ss:'A',bw:1,alts:['Kabel-crunch','Ab wheel']}]},
+{n:'Overkropp volum',fin:null,ex:[
+{id:'ohp',n:'Militærpress',t:'w',sets:3,r:[6,8],rest:120,bar:1,def:40,warm:[[0,10],[.6,5],[.85,2]],alts:['Manual-skulderpress','Skulderpress-maskin']},
+{id:'dips',n:'Dips',t:'w',sets:3,r:[8,12],rest:90,ss:'A',add:1,inc:2.5,def:0,alts:['Dips-maskin','Nedoverbenk manualer']},
+{id:'crow',n:'Kabelroing',t:'w',sets:3,r:[10,12],rest:90,ss:'A',inc:2.5,def:50,alts:['Maskinroing','Hantelroing']},
+{id:'lat',n:'Sidehev',t:'w',sets:3,r:[12,15],rest:60,ss:'B',inc:1,def:8,alts:['Kabelsidehev','Sidehev-maskin']},
+{id:'face',n:'Face pulls',t:'w',sets:3,r:[15,20],rest:60,ss:'B',inc:2.5,def:20,alts:['Omvendt flyes','Band pull-aparts']},
+{id:'bic',n:'Bicepscurl',t:'w',sets:2,r:[10,12],rest:60,ss:'C',inc:1,def:12,alts:['Stangcurl','Kabelcurl']},
+{id:'tri',n:'Triceps pushdown',t:'w',sets:2,r:[10,12],rest:60,ss:'C',inc:2.5,def:25,alts:['Overhead triceps','Skullcrushers']}]},
+{n:'Underkropp volum',fin:'Sykkel eller romaskin',ex:[
+{id:'dl',n:'Markløft',t:'top',top:[3,5],bo:2,boR:[5,5],rest:180,bar:1,def:100,warm:[[.4,5],[.6,3],[.8,2],[.9,1]],alts:['Trap bar-markløft','Rack pulls']},
+{id:'lp',n:'Beinpress',t:'w',sets:3,r:[10,12],rest:120,inc:5,def:120,alts:['Hack squat','Goblet squat']},
+{id:'lc',n:'Leg curl',t:'w',sets:3,r:[10,12],rest:75,ss:'A',inc:2.5,def:35,alts:['Liggende leg curl','Nordic curl']},
+{id:'calf',n:'Tåhev',t:'w',sets:3,r:[12,15],rest:75,ss:'A',inc:5,def:60,alts:['Sittende tåhev','Tåhev i beinpress']}]}
+];
+const MAIN=[['bench','Benk'],['squat','Knebøy'],['dl','Markløft'],['pull','Pull-ups']];
+const ALL={};P.forEach(d=>d.ex.forEach(e=>ALL[e.id]=e));
+const KEY='styrke_app_v1';let noStore=false;
+function load(){try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){noStore=true;return null}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){noStore=true}}
+let S=load()||{settings:{has125:true},deload:false,nextDay:0,sessions:[],active:null};
+let ui={view:S.active?'work':'home',sel:S.nextDay,lift:'bench',alts:false,editT:false,err:'',io:null,ioErr:'',copied:false,sum:null,cf:''};
+let draft=null,beeped=true,lastPh=-2,charts=[],ac=null,wl=null;
+const fmt=n=>n==null||isNaN(n)?'–':String(Math.round(n*100)/100).replace('.',',');
+const num=v=>{if(v==null||v==='')return null;const x=parseFloat(String(v).replace(',','.'));return isNaN(x)?null:x};
+const mmss=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+const rt=r=>r[0]===r[1]?String(r[0]):r[0]+'–'+r[1];
+const e1=(w,r)=>w>0&&r>0?w*(1+r/30):0;
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const dl=(n,d)=>d?Math.max(1,Math.round(n*.6)):n;
+function stepFor(d){return d.bar?(S.settings.has125?2.5:5):(d.inc||2.5)}
+function rnd(w,st){return w==null?null:Math.round(w/st)*st}
+function keyOf(id){return S.active&&S.active.subs[id]?id+'|'+S.active.subs[id]:id}
+function defOf(key){if(key.indexOf('|')<0)return ALL[key];const[id,alt]=key.split('|');const b=ALL[id];return Object.assign({},b,{id:key,n:alt,bar:0,def:null,warm:null,bw:0,add:0,inc:b.bar?2.5:(b.inc||2.5)})}
+function wTxt(d,w){if(d.bw)return 'Kroppsvekt';if(w==null)return 'Velg vekt';if(d.add)return w>0?'+'+fmt(w)+' kg':'Kroppsvekt';return fmt(w)+' kg'}
+function hist(key){return S.sessions.filter(s=>!s.deload&&s.ex[key]&&s.ex[key].sets.some(x=>x.k!=='warm')).reverse()}
+function isMiss(d,sets){if(d.t==='top'){const s=sets.find(x=>x.k==='top');return s?(s.r<d.top[0]||(s.rpe||8)>=10):false}return sets.filter(x=>x.k==='work').some(x=>x.r<d.r[0]||(x.rpe||8)>=10)}
+function computeTarget(key,deload){
+const d=defOf(key),st=stepFor(d),inc=d.bar?st:(d.inc||2.5),h=hist(key),R=d.t==='top'?d.top:d.r;
+let T={w:d.bw?0:d.def,goal:R[0],status:'new',note:d.def==null?'Velg vekt for '+d.n:'Første gang: juster vekten',prev:[]};
+if(h.length){const sets=h[0].ex[key].sets;T.prev=sets;let ref,up;
+if(d.t==='top'){ref=sets.find(x=>x.k==='top')||sets.find(x=>x.k!=='warm');up=ref.k==='top'&&ref.r>=R[1]&&(ref.rpe||8)<=8}
+else{const ws=sets.filter(x=>x.k==='work');ref=ws[0];up=ws.length>0&&ws.every(x=>x.r>=R[1])&&ws.reduce((a,x)=>a+(x.rpe||8),0)/ws.length<=8}
+const w=ref.w,miss=isMiss(d,sets);
+if(d.bw){T.w=0;if(up){T.status='up';T.goal=R[1];T.note='Toppen nådd: prøv tyngre variant'}else{T.status='hold';T.goal=null;T.note='Én rep mer per sett'}}
+else if(up){T.w=rnd(w+inc,st);T.status='up';T.goal=R[0];T.note='Ny vekt: +'+fmt(inc)+' kg'}
+else if(miss){const pm=h[1]&&isMiss(d,h[1].ex[key].sets);if(pm){T.w=rnd(w*.95,st);T.status='down';T.note='To bom på rad: ned 5 %'}else{T.w=w;T.status='miss';T.note='Bom sist: samme vekt'}T.goal=R[0]}
+else{T.w=w;T.status='hold';T.goal=d.t==='top'?Math.min(R[1],ref.r+1):null;T.note=(ref.rpe||8)>=9?'RPE 9 sist: samme vekt':'Samme vekt, én rep mer'}}
+if(deload&&T.w!=null){T.w=rnd(T.w*.9,st);T.goal=R[0];T.status='deload';T.note='Deload: lett uke'}
+return T}
+function buildQueue(day,deload){const ex=P[day].ex,q=[];let i=0;
+while(i<ex.length){const e=ex[i];
+if(e.ss&&ex[i+1]&&ex[i+1].ss===e.ss){const a=e,b=ex[i+1],na=dl(a.sets,deload),nb=dl(b.sets,deload);for(let s=0;s<Math.max(na,nb);s++){if(s<na)q.push({ex:a.id,k:'work',i:s,n:na,ss:1,rest:s<nb?0:a.rest});if(s<nb)q.push({ex:b.id,k:'work',i:s,n:nb,ss:2,rest:b.rest})}i+=2;continue}
+if(e.warm)e.warm.forEach((x,j)=>q.push({ex:e.id,k:'warm',i:j,n:e.warm.length,pct:x[0],reps:x[1],rest:j===e.warm.length-1?90:45}));
+if(e.t==='top'){q.push({ex:e.id,k:'top',i:0,n:1,rest:e.rest});const nb=dl(e.bo,deload);for(let s=0;s<nb;s++)q.push({ex:e.id,k:'back',i:s,n:nb,rest:120})}
+else{const n=dl(e.sets,deload);for(let s=0;s<n;s++)q.push({ex:e.id,k:'work',i:s,n,rest:e.rest})}
+i++}return q}
+function itemInfo(it){const A=S.active,key=keyOf(it.ex),d=defOf(key);if(!A.targets[key])A.targets[key]=computeTarget(key,A.deload);
+const T=A.targets[key],st=stepFor(d),logs=A.logs[key]||[];let w,range,goal=null,prev=null,label;
+if(it.k==='warm'){w=it.pct===-1?0:it.pct===0?20:Math.max(20,rnd(T.w*it.pct,st));range=[it.reps,it.reps];label='Oppvarming '+(it.i+1)+'/'+it.n}
+else{const same=logs.filter(x=>x.k===it.k);
+if(it.k==='top'){w=T.w;range=d.top;label='Toppsett'}
+else if(it.k==='back'){const tp=logs.find(x=>x.k==='top');const base=tp&&tp.w!=null?tp.w:T.w;w=same.length?same[same.length-1].w:(base==null?null:rnd(base*.875,st));range=d.boR;label='Backoff '+(it.i+1)+'/'+it.n}
+else{w=same.length?same[same.length-1].w:T.w;range=d.r;label=(d.ss?d.ss+it.ss+' · ':'')+'Sett '+(it.i+1)+'/'+it.n}
+prev=(T.prev||[]).filter(x=>x.k===it.k)[it.i]||null;
+if(it.k==='top')goal=T.goal;else if(T.status==='hold'&&prev)goal=Math.min(range[1],prev.r+1);else if(T.status==='up'&&d.bw)goal=range[1];else goal=range[0]}
+if(d.bw)w=0;return{key,d,T,w,range,goal,prev,label,name:d.n,st}}
+function goalText(I){if(I.goal==null)return '–';const s=I.T.status;if(s==='deload')return 'Minst '+I.goal+' reps, hold igjen';if(s==='up'&&!I.d.bw)return 'Minst '+I.goal+' reps (ny vekt)';if(I.prev&&I.goal>I.prev.r&&Math.abs((I.prev.w||0)-(I.w||0))<.01)return 'Slå '+I.prev.r+' reps → '+I.goal;return 'Minst '+I.goal+' reps'}
+function plates(w){if(w==null)return '';if(w<=20)return 'Bare stang';let side=(w-20)/2;const ps=[25,20,15,10,5,2.5].concat(S.settings.has125?[1.25]:[]),out=[];for(const p of ps){while(side>=p-1e-9){out.push(p);side-=p}}return out.map(fmt).join(' + ')+' per side'+(side>.01?' (≈)':'')}
+function icon(s){if(s==='up')return '<i class="ti ti-trending-up" style="color:var(--text-success)"></i>';if(s==='down')return '<i class="ti ti-trending-down" style="color:var(--text-danger)"></i>';if(s==='miss')return '<i class="ti ti-repeat" style="color:var(--text-warning)"></i>';if(s==='deload')return '<i class="ti ti-feather"></i>';if(s==='new')return '<i class="ti ti-sparkles"></i>';return '<i class="ti ti-target"></i>'}
+async function wake(){try{if('wakeLock' in navigator&&S.active&&!wl){wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>{wl=null})}}catch(e){}}
+function unlock(){if(!ac){try{ac=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(ac&&ac.state==='suspended')ac.resume();wake()}
+function beep(f,ms,n){if(ac){for(let k=0;k<n;k++){const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;o.connect(g);g.connect(ac.destination);const t=ac.currentTime+k*.25;g.gain.setValueAtTime(.2,t);g.gain.exponentialRampToValueAtTime(.001,t+ms/1000);o.start(t);o.stop(t+ms/1000)}}try{navigator.vibrate&&navigator.vibrate(200)}catch(e){}}
+function start(day){S.active={day,deload:S.deload,start:Date.now(),q:[],idx:0,logs:{},subs:{},targets:{},phase:'sets',restEnd:0,restTot:0,fin:null};S.active.q=buildQueue(day,S.deload);P[day].ex.forEach(e=>S.active.targets[e.id]=computeTarget(e.id,S.deload));draft=null;ui.view='work';save();wake();render()}
+function afterSets(){const A=S.active;if(P[A.day].fin){A.phase='fin';A.fin={el:0,run:false,t0:0};A.restEnd=0;save()}else finish()}
+function complete(){const A=S.active,it=A.q[A.idx],I=itemInfo(it);const w=I.d.bw?0:num(draft.w);
+if(!I.d.bw&&(w==null||w<0)){ui.err='Skriv inn vekt først';render();return}
+const r=parseInt(draft.r);if(!(r>=0)){ui.err='Skriv inn antall reps';render();return}
+ui.err='';(A.logs[I.key]=A.logs[I.key]||[]).push({k:it.k,i:it.i,w,r,rpe:it.k==='warm'?null:draft.rpe,goal:it.k==='warm'?null:I.goal});
+A.idx++;draft=null;ui.alts=false;ui.editT=false;
+if(it.rest>0&&A.idx<A.q.length){A.restEnd=Date.now()+it.rest*1000;A.restTot=it.rest;beeped=false}else A.restEnd=0;
+save();if(A.idx>=A.q.length){afterSets();if(!S.active)return}render()}
+function sub(alt){const A=S.active,it=A.q[A.idx];A.subs[it.ex]=alt;const key=it.ex+'|'+alt;if(!A.targets[key])A.targets[key]=computeTarget(key,A.deload);A.q=A.q.filter((x,j)=>!(j>=A.idx&&x.ex===it.ex&&x.k==='warm'));draft=null;ui.alts=false;save()}
+function finish(){const A=S.active;if(!A)return;const dur=Math.max(1,Math.round((Date.now()-A.start)/60000)),ex={};let vol=0,met=0,tot=0;const changes=[],prs=[];
+Object.keys(A.logs).forEach(key=>{const sets=A.logs[key];if(!sets.length)return;const d=defOf(key);ex[key]={name:d.n,sets:sets.map(x=>({k:x.k,i:x.i,w:x.w,r:x.r,rpe:x.rpe,goal:x.goal}))};
+const g=sets.filter(x=>x.k!=='warm');if(!g.length)return;g.forEach(x=>vol+=(x.w||0)*x.r);tot++;if(g.every(x=>x.goal==null||x.r>=x.goal))met++;
+const T=A.targets[key],p=(T&&T.prev||[]).find(x=>x.k===g[0].k&&x.i===g[0].i);
+if(p&&!A.deload){const dw=(g[0].w||0)-(p.w||0);if(Math.abs(dw)>.01)changes.push({t:d.n+': '+(dw>0?'+':'')+fmt(dw)+' kg',up:dw>0});else if(g[0].r!==p.r){const dr=g[0].r-p.r;changes.push({t:d.n+': '+(dr>0?'+':'')+dr+(Math.abs(dr)===1?' rep':' reps'),up:dr>0})}}
+const best=Math.max(0,...g.map(x=>e1(x.w,x.r)));if(best>0){const pb=Math.max(0,...S.sessions.filter(s=>s.ex[key]).flatMap(s=>s.ex[key].sets.filter(x=>x.k!=='warm').map(x=>e1(x.w,x.r))));if(pb>0&&best>pb+.01)prs.push(d.n+': e1RM '+fmt(Math.round(best*2)/2)+' kg')}});
+const rec={n:S.sessions.length+1,day:A.day,date:new Date().toISOString(),dur,deload:A.deload,ex,vol,met,tot,changes,prs};
+if(tot>0){S.sessions.push(rec);S.nextDay=(A.day+1)%4}S.active=null;draft=null;ui.sum=rec;ui.sel=S.nextDay;ui.view=tot>0?'sum':'home';save();if(wl){try{wl.release()}catch(e){}}render()}
+function liftSeries(id){return S.sessions.filter(s=>s.ex[id]&&s.ex[id].sets.some(x=>x.k!=='warm')).map(s=>({l:'Økt '+s.n,y:Math.round(Math.max(0,...s.ex[id].sets.filter(x=>x.k!=='warm').map(x=>e1(x.w,x.r)))*2)/2}))}
+function indexSeries(){const first={},last={},out=[];S.sessions.forEach(s=>{MAIN.forEach(([id])=>{if(s.ex[id]&&!s.deload){const b=Math.max(0,...s.ex[id].sets.filter(x=>x.k!=='warm').map(x=>e1(x.w,x.r)));if(b>0){if(!first[id])first[id]=b;last[id]=b}}});const ids=Object.keys(first);if(ids.length)out.push({l:'Økt '+s.n,y:Math.round(ids.reduce((a,id)=>a+last[id]/first[id],0)/ids.length*1000)/10})});return out}
+function lineChart(id,pts,color){const el=document.getElementById(id);if(!el||typeof Chart==='undefined')return;const tc=(getComputedStyle(document.documentElement).getPropertyValue('--text-secondary')||'').trim()||'#888';
+charts.push(new Chart(el,{type:'line',data:{labels:pts.map(p=>p.l),datasets:[{data:pts.map(p=>p.y),borderColor:color,backgroundColor:color,pointRadius:3,tension:.3,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,maxTicksLimit:5,font:{size:11}},grid:{display:false}},y:{ticks:{color:tc,font:{size:11}},grid:{color:'rgba(128,128,128,0.15)'}}}}}))}
+function drawCharts(){charts.forEach(c=>c.destroy());charts=[];lineChart('c1',liftSeries(ui.lift),'#378ADD');lineChart('c2',indexSeries(),'#1D9E75')}
+function homeHTML(){const A=S.active,d=ui.sel,D=P[d];let h='';
+if(noStore)h+='<div class="cd mu"><i class="ti ti-alert-triangle"></i> Lagring er ikke tilgjengelig. Bruk eksport for å ta vare på loggen.</div>';
+if(A)h+=`<div class="cd"><div class="mu">Økt pågår</div><div style="font-size:18px;font-weight:500;margin:2px 0 12px">Dag ${A.day+1} · ${P[A.day].n}</div><button class="pr" data-a="resume"><i class="ti ti-player-play"></i> Fortsett økt</button><button data-a="discard" style="width:100%;margin-top:8px">${ui.cf==='discard'?'Trykk igjen for å forkaste':'Forkast økt'}</button></div>`;
+h+='<div class="g2" style="margin-bottom:12px">'+P.map((p,i)=>`<button data-a="sel" data-v="${i}" class="${i===d?'on':''}" style="height:auto;padding:8px 10px;text-align:left"><div style="font-weight:500;font-size:14px">Dag ${i+1}${i===S.nextDay?' · neste':''}</div><div style="font-size:12px;color:inherit">${p.n}</div></button>`).join('')+'</div>';
+h+=`<div class="cd"><div class="r sb"><div><div class="mu">${d===S.nextDay?'Neste økt':'Valgt økt'}</div><div style="font-size:18px;font-weight:500">${D.n}</div></div>${S.deload?'<span class="ch">Deload</span>':''}</div><div style="margin:10px 0 14px">`+D.ex.map(e=>{const T=computeTarget(e.id,S.deload);return `<div class="li"><span style="min-width:0">${e.ss?'<span class="mu">'+e.ss+' </span>':''}${e.n}</span><span style="white-space:nowrap">${T.status==='up'||T.status==='down'||T.status==='miss'?icon(T.status)+' ':''}${wTxt(e,T.w)} × ${e.t==='top'?T.goal:rt(e.r)}</span></div>`}).join('')+(D.fin?`<div class="li"><span>Intervaller <span class="mu">· ${D.fin}</span></span><span>6 × 30/60</span></div>`:'')+'</div>'+(A?'':'<button class="pr" data-a="start"><i class="ti ti-barbell"></i> Start økt</button>')+'</div>';
+h+=`<div class="cd"><div class="li" style="border-top:none;padding-top:0"><div><div>Deload-uke</div><div class="mu">Ca. 60 % volum, 10 % lettere</div></div><button data-a="deload" class="${S.deload?'on':''}" style="min-width:64px">${S.deload?'På':'Av'}</button></div><div class="li" style="padding-bottom:0"><div><div>1,25 kg-skiver</div><div class="mu">Av = stanga går i hopp på 5 kg</div></div><button data-a="p125" class="${S.settings.has125?'on':''}" style="min-width:64px">${S.settings.has125?'På':'Av'}</button></div></div>`;
+const ls=liftSeries(ui.lift),ix=indexSeries();
+h+='<div class="cd"><div style="font-weight:500;margin-bottom:8px">Fremgang</div><div class="g2" style="margin-bottom:10px">'+MAIN.map(([id,n])=>`<button data-a="lift" data-v="${id}" class="${ui.lift===id?'on':''}">${n}</button>`).join('')+'</div>'+(ls.length?'<div class="mu">Estimert 1RM (kg)</div><div style="position:relative;height:180px;margin:6px 0 14px"><canvas id="c1"></canvas></div>':'<div class="mu" style="padding:8px 0 4px">Fullfør en økt med denne øvelsen for å se grafen.</div>')+(ix.length?'<div class="mu">Total styrkeindeks (start = 100)</div><div style="position:relative;height:140px;margin-top:6px"><canvas id="c2"></canvas></div>':'')+'</div>';
+if(S.sessions.length)h+='<div class="cd"><div style="font-weight:500;margin-bottom:4px">Historikk</div>'+S.sessions.slice(-5).reverse().map(s=>{const dt=new Date(s.date);return `<div class="li"><span>Økt ${s.n} <span class="mu">· Dag ${s.day+1} · ${dt.getDate()}.${dt.getMonth()+1}.</span></span><span class="mu">${(s.vol/1000).toFixed(1).replace('.',',')} t · ${s.met}/${s.tot}</span></div>`}).join('')+'</div>';
+h+='<div class="cd"><div class="r sb"><span style="font-weight:500">Sikkerhetskopi</span><div class="r"><button data-a="exp" style="height:36px">Eksporter</button><button data-a="imp" style="height:36px">Importer</button></div></div>';
+if(ui.io==='exp')h+=`<textarea id="ioT" readonly style="width:100%;height:110px;margin-top:10px;font-family:var(--font-mono);font-size:12px">${esc(JSON.stringify({v:1,settings:S.settings,nextDay:S.nextDay,sessions:S.sessions}))}</textarea><button data-a="copy" style="width:100%;margin-top:6px">${ui.copied?'Kopiert':'Kopier'}</button>`;
+if(ui.io==='imp')h+=`<textarea id="ioT" placeholder="Lim inn eksportert data" style="width:100%;height:110px;margin-top:10px;font-family:var(--font-mono);font-size:12px"></textarea>${ui.ioErr?'<div style="color:var(--text-danger);font-size:13px;margin-top:4px">'+ui.ioErr+'</div>':''}<button data-a="doImp" style="width:100%;margin-top:6px">Importer data</button>`;
+return h+'</div>'}
+function finHTML(){const A=S.active,F=A.fin,done=F.el>=540,D=P[A.day];
+return `<div class="cd"><div class="mu">Avslutning · ${D.fin}</div><div style="font-size:18px;font-weight:500;margin-bottom:12px">6 × 30 sek hardt / 60 sek rolig</div>`+(done?'<div style="text-align:center;padding:1.5rem 0"><i class="ti ti-flame" style="font-size:24px;color:var(--text-success)"></i><div style="font-size:18px;font-weight:500;margin-top:6px">Intervaller ferdig</div></div><button class="pr" data-a="finDone">Fullfør økt</button>':`<div id="finBox" style="text-align:center;padding:1.25rem 0;border-radius:12px;background:var(--surface-1);margin-bottom:10px"><div id="finP" style="font-size:18px;font-weight:500">Hardt</div><div id="finT" style="font-size:44px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.2">0:30</div><div id="finR" class="mu">Runde 1 av 6</div></div><div class="bar" style="margin-bottom:12px"><div id="finBar" style="width:0%"></div></div><button class="pr" data-a="finT">${F.run?'Pause':(F.el>0?'Fortsett':'Start intervaller')}</button><button data-a="finSkip" style="width:100%;margin-top:8px">Hopp over og fullfør</button>`)+'</div>'}
+function workHTML(){const A=S.active,D=P[A.day];
+const head=`<div class="r sb" style="margin-bottom:6px"><span class="mu">Dag ${A.day+1} · ${D.n}${A.deload?' · deload':''}</span><span class="mu"><i class="ti ti-clock"></i> <span id="el" style="font-variant-numeric:tabular-nums">0:00</span></span></div>`;
+if(A.phase==='fin')return head+finHTML();
+const it=A.q[A.idx],I=itemInfo(it),T=I.T,sub=A.subs[it.ex];
+if(!draft||draft.idx!==A.idx)draft={idx:A.idx,w:I.d.bw?'0':(I.w==null?'':fmt(I.w)),r:String(it.k==='warm'?it.reps:(I.goal!=null?I.goal:I.range[0])),rpe:null};
+let h=head+`<div class="bar" style="margin-bottom:4px"><div style="width:${Math.round(A.idx/A.q.length*100)}%"></div></div><div class="mu" style="margin-bottom:12px">Sett ${A.idx+1} av ${A.q.length}</div>`;
+if(A.restEnd)h+='<div class="cd" style="background:var(--surface-1);border-color:transparent"><div class="r sb"><div><div class="mu">Hvile</div><div id="restT" style="font-size:32px;font-weight:500;font-variant-numeric:tabular-nums">–</div></div><div class="r" style="gap:6px"><button data-a="rm15">−15</button><button data-a="rp30">+30</button><button data-a="rskip" aria-label="Hopp over hvile"><i class="ti ti-player-skip-forward"></i></button></div></div><div class="bar" style="margin-top:10px"><div id="restBar" style="width:100%"></div></div></div>';
+const dagMal=wTxt(I.d,T.w)+' × '+(I.d.t==='top'?T.goal:rt(I.d.r));
+h+=`<div class="cd"><div class="r sb" style="align-items:flex-start"><div style="min-width:0"><div style="font-size:18px;font-weight:500">${I.name}</div>${sub?'<div class="mu">Bytte for '+ALL[it.ex].n+'</div>':''}</div><span class="ch">${I.label}</span></div>
+<div class="r sb" style="margin-top:8px"><div style="min-width:0"><div style="font-size:14px">Dagens mål: <span style="font-weight:500">${dagMal}</span></div><div class="mu">${icon(T.status)} ${T.note}</div></div><button data-a="editT" style="height:32px;font-size:13px;padding:0 10px;flex:none">Endre</button></div>
+${ui.editT?`<div class="r" style="margin-top:8px"><input id="tIn" inputmode="decimal" placeholder="${T.w==null?'80':fmt(T.w)}" style="flex:1;min-width:0"><button data-a="setT">Oppdater</button></div>`:''}
+<div style="border-top:0.5px solid var(--border);margin-top:12px;padding-top:12px"><div class="mu">Neste</div><div style="font-size:30px;font-weight:500;line-height:1.25">${wTxt(I.d,I.w)} × ${it.k==='warm'?it.reps:rt(I.range)}</div>${I.d.bar&&I.w>0&&!sub?'<div class="mu" style="margin-top:2px"><i class="ti ti-circles"></i> '+plates(I.w)+'</div>':''}</div>
+<div style="margin:10px 0 12px;font-size:14px"><div class="r sb" style="padding:3px 0"><span class="mu">Forrige</span><span>${I.prev?wTxt(I.d,I.prev.w)+' × '+I.prev.r+(I.prev.rpe?' @ '+I.prev.rpe:''):'–'}</span></div><div class="r sb" style="padding:3px 0"><span class="mu">Mål</span><span>${it.k==='warm'?'Lett og raskt':goalText(I)}</span></div><div class="r sb" style="padding:3px 0"><span class="mu">Hvile etter</span><span>${it.rest?mmss(it.rest):'Rett til neste øvelse'}</span></div></div>
+<div class="g2"><div><div class="mu" style="margin-bottom:4px">${I.d.add?'Ekstra vekt (kg)':'Vekt (kg)'}</div>${I.d.bw?'<div class="mu" style="height:44px;display:flex;align-items:center">Kroppsvekt</div>':`<div class="r st" style="gap:4px"><button data-a="wm">−</button><input id="wIn" inputmode="decimal" value="${draft.w}"><button data-a="wp">+</button></div>`}</div><div><div class="mu" style="margin-bottom:4px">Reps</div><div class="r st" style="gap:4px"><button data-a="rm">−</button><input id="rIn" inputmode="numeric" value="${draft.r}"><button data-a="rp">+</button></div></div></div>
+${it.k!=='warm'?'<div class="mu" style="margin:12px 0 4px">RPE <span style="color:var(--text-muted)">· 8 = 2 reps igjen</span></div><div class="r" style="gap:6px">'+[6,7,8,9,10].map(v=>`<button data-a="rpe" data-v="${v}" class="${draft.rpe===v?'on':''}" style="flex:1;padding:0">${v}</button>`).join('')+'</div>':''}
+${ui.err?'<div style="color:var(--text-danger);font-size:13px;margin-top:8px">'+ui.err+'</div>':''}
+<button class="pr" data-a="done" style="margin-top:14px"><i class="ti ti-check"></i> Fullført sett</button>
+<div class="g2" style="margin-top:8px"><button data-a="alts"><i class="ti ti-replace"></i> Utstyr opptatt</button><button data-a="skip">Hopp over sett</button></div>
+${ui.alts?'<div style="margin-top:10px"><div class="mu" style="margin-bottom:6px">Velg alternativ med samme mål</div>'+ALL[it.ex].alts.map(a=>`<button data-a="alt" data-v="${a}" style="width:100%;margin-bottom:6px;text-align:left">${a}</button>`).join('')+'</div>':''}</div>`;
+const up=A.q.slice(A.idx+1,A.idx+4);
+if(up.length)h+='<div class="cd"><div class="mu" style="margin-bottom:4px">Deretter</div>'+up.map(x=>{const J=itemInfo(x);return `<div class="li"><span style="min-width:0">${J.name} <span class="mu">· ${J.label}</span></span><span style="white-space:nowrap">${wTxt(J.d,J.w)} × ${x.k==='warm'?x.reps:rt(J.range)}</span></div>`}).join('')+'</div>';
+h+=`<div class="g2"><button data-a="end">${ui.cf==='end'?'Trykk igjen':'Avslutt nå'}</button><button data-a="disc2">${ui.cf==='disc2'?'Trykk igjen':'Forkast økt'}</button></div><button data-a="home" style="width:100%;margin-top:8px">Til oversikten</button>`;
+return h}
+function sumHTML(){const s=ui.sum;return `<div class="cd"><div class="r sb"><div><div class="mu">Økt fullført</div><div style="font-size:22px;font-weight:500">Økt ${s.n}</div></div><i class="ti ti-circle-check" style="font-size:24px;color:var(--text-success)"></i></div><div class="mu" style="margin:4px 0 12px">Dag ${s.day+1} · ${P[s.day].n} · ${s.dur} min${s.deload?' · deload':''}</div>
+<div class="g2"><div class="mt"><div class="mu">Volum</div><div style="font-size:24px;font-weight:500">${(s.vol/1000).toFixed(1).replace('.',',')} tonn</div></div><div class="mt"><div class="mu">Mål nådd</div><div style="font-size:24px;font-weight:500">${s.met}/${s.tot}</div></div></div>`+
+(s.prs.length?'<div style="margin-top:14px;font-weight:500">Personlige rekorder</div>'+s.prs.map(p=>`<div class="li"><span><i class="ti ti-trophy" style="color:var(--text-warning)"></i> ${p}</span></div>`).join(''):'')+
+(s.changes.length?'<div style="margin-top:14px;font-weight:500">Endring fra forrige gang</div>'+s.changes.map(c=>`<div class="li"><span>${c.t}</span><i class="ti ti-${c.up?'arrow-up':'arrow-down'}" style="color:var(--text-${c.up?'success':'danger'})"></i></div>`).join(''):'')+
+'<button class="pr" data-a="home" style="margin-top:16px">Ferdig</button></div>'}
+const root=document.getElementById('app');
+function render(){if(ui.view==='work'&&!S.active)ui.view='home';if(ui.view==='sum'&&!ui.sum)ui.view='home';
+if(ui.view==='work'&&S.active.phase==='sets'&&S.active.idx>=S.active.q.length){afterSets();if(!S.active)return}
+charts.forEach(c=>c.destroy());charts=[];
+root.innerHTML=ui.view==='work'?workHTML():ui.view==='sum'?sumHTML():homeHTML();if(ui.view==='home')drawCharts();tick()}
+function tick(){const A=S.active;if(!A||ui.view!=='work')return;const now=Date.now(),el=document.getElementById('el');if(el)el.textContent=mmss((now-A.start)/1000);
+if(A.phase==='sets'&&A.restEnd){const rem=(A.restEnd-now)/1000,t=document.getElementById('restT'),b=document.getElementById('restBar');if(t)t.textContent=rem>0?mmss(rem):'Klar';if(b)b.style.width=Math.max(0,Math.min(100,rem/A.restTot*100))+'%';if(rem<=0&&!beeped){beeped=true;beep(988,200,2)}}
+if(A.phase==='fin'&&A.fin){const F=A.fin,e=F.el+(F.run?(now-F.t0)/1000:0);
+if(e>=540){if(F.run){F.run=false;F.el=540;beep(988,250,3);save();render()}return}
+const rd=Math.floor(e/90),w=e%90,hard=w<30,ph=rd*2+(hard?0:1),rem=hard?30-w:90-w;
+const bx=document.getElementById('finBox'),p=document.getElementById('finP'),t=document.getElementById('finT'),r=document.getElementById('finR'),b=document.getElementById('finBar');
+if(p){p.textContent=hard?'Hardt':'Rolig';p.style.color=hard?'var(--text-danger)':'var(--text-success)'}if(t)t.textContent=mmss(rem);if(r)r.textContent='Runde '+(rd+1)+' av 6';if(b)b.style.width=(e/540*100)+'%';if(bx)bx.style.background=(F.run||F.el>0)?(hard?'var(--bg-danger)':'var(--bg-success)'):'var(--surface-1)';
+if(F.run&&ph!==lastPh){if(lastPh!==-2)beep(hard?1200:660,220,hard?2:1);lastPh=ph}}}
+setInterval(tick,250);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){wake();tick()}});
+root.addEventListener('input',e=>{if(!draft)return;if(e.target.id==='wIn'){draft.w=e.target.value}if(e.target.id==='rIn'){draft.r=e.target.value}});
+root.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||!root.contains(b))return;unlock();act(b.dataset.a,b.dataset.v)});
+function act(a,v){const A=S.active;if(['discard','end','disc2'].includes(a)&&ui.cf!==a){ui.cf=a;render();return}ui.cf='';
+switch(a){
+case 'sel':ui.sel=+v;break;
+case 'start':start(ui.sel);return;
+case 'resume':ui.view='work';break;
+case 'discard':case 'disc2':S.active=null;draft=null;ui.view='home';save();break;
+case 'end':finish();return;
+case 'home':ui.view='home';ui.io=null;break;
+case 'deload':S.deload=!S.deload;save();break;
+case 'p125':S.settings.has125=!S.settings.has125;save();break;
+case 'lift':ui.lift=v;break;
+case 'wm':case 'wp':{const I=itemInfo(A.q[A.idx]);const st=I.d.bar?I.st:(I.d.inc||2.5);const cur=num(draft.w)||0;draft.w=fmt(Math.max(0,Math.round((cur+(a==='wp'?st:-st))*100)/100));ui.err='';break}
+case 'rm':case 'rp':draft.r=String(Math.max(0,(parseInt(draft.r)||0)+(a==='rp'?1:-1)));ui.err='';break;
+case 'rpe':draft.rpe=draft.rpe===+v?null:+v;break;
+case 'done':complete();return;
+case 'skip':A.idx++;draft=null;ui.alts=false;ui.editT=false;save();if(A.idx>=A.q.length){afterSets();if(!S.active)return}break;
+case 'alts':ui.alts=!ui.alts;break;
+case 'alt':sub(v);break;
+case 'rm15':A.restEnd-=15000;break;
+case 'rp30':A.restEnd+=30000;A.restTot+=30;beeped=false;break;
+case 'rskip':A.restEnd=0;save();break;
+case 'editT':ui.editT=!ui.editT;break;
+case 'setT':{const val=num((document.getElementById('tIn')||{}).value);if(val!=null&&val>=0){const k=keyOf(A.q[A.idx].ex);A.targets[k].w=val;A.targets[k].note='Mål justert manuelt';draft=null;ui.editT=false;save()}break}
+case 'finT':{const F=A.fin,now=Date.now();if(F.run){F.el+=(now-F.t0)/1000;F.run=false}else{if(F.el===0)lastPh=-1;F.t0=now;F.run=true}save();break}
+case 'finSkip':case 'finDone':finish();return;
+case 'exp':ui.io=ui.io==='exp'?null:'exp';ui.copied=false;break;
+case 'imp':ui.io=ui.io==='imp'?null:'imp';ui.ioErr='';break;
+case 'copy':{const t=document.getElementById('ioT');try{navigator.clipboard.writeText(t.value).then(()=>{ui.copied=true;render()}).catch(()=>t.select())}catch(err){t&&t.select()}return}
+case 'doImp':{const t=document.getElementById('ioT');try{const o=JSON.parse(t.value);if(!o||!Array.isArray(o.sessions))throw 0;S.sessions=o.sessions;if(o.settings)S.settings=o.settings;if(typeof o.nextDay==='number')S.nextDay=o.nextDay;ui.sel=S.nextDay;ui.io=null;save()}catch(err){ui.ioErr='Ugyldig data. Lim inn hele eksporten.'}break}
+}
+render()}
+render();
+</script>
+</body>
+</html>
