@@ -42,38 +42,49 @@ input:focus,textarea:focus{outline:none;border-color:var(--border-accent)}
 </main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
+// Program etter Jeff Nippards prinsipper: 1 beindag + 3 overkroppsdager.
+// rir:[tidligere sett, siste sett]; llp:1 = long-length partials etter failure på siste sett.
+const PROG=2;
 const W1=[[0,10],[.6,5],[.8,3],[.9,1]];
 const P=[
-{n:'Overkropp tung',fin:'Romaskin',ex:[
-{id:'bench',n:'Benkpress',t:'top',top:[4,6],bo:3,boR:[6,8],rest:150,bar:1,def:60,warm:W1,alts:['Manualpress flat','Smith-benkpress','Chest press-maskin']},
-{id:'pull',n:'Vektet pull-ups',t:'top',top:[5,6],bo:2,boR:[8,8],rest:150,add:1,inc:2.5,def:0,warm:[[-1,5]],alts:['Nedtrekk','Assistert pull-up']},
-{id:'incdb',n:'Skrå manualpress',t:'w',sets:3,r:[8,10],rest:90,ss:'A',inc:2,def:24,alts:['Skrå Smith-press','Skrå maskinpress']},
-{id:'csrow',n:'Brystsupportert roing',t:'w',sets:3,r:[10,12],rest:90,ss:'A',inc:2.5,def:40,alts:['Kabelroing','Maskinroing']}]},
-{n:'Underkropp tung',fin:'Sykkel',ex:[
-{id:'squat',n:'Knebøy',t:'top',top:[4,6],bo:3,boR:[6,6],rest:180,bar:1,def:80,warm:W1,alts:['Hack squat','Beinpress']},
-{id:'rdl',n:'Rumensk markløft',t:'w',sets:3,r:[6,8],rest:120,bar:1,def:70,warm:[[.6,5]],alts:['Hantel-RDL','Liggende leg curl']},
-{id:'bulg',n:'Bulgarske utfall',t:'w',sets:3,r:[8,10],rest:90,ss:'A',inc:2,def:16,alts:['Gående utfall','Step-ups']},
-{id:'hlr',n:'Hengende beinhev',t:'w',sets:3,r:[10,12],rest:90,ss:'A',bw:1,alts:['Kabel-crunch','Ab wheel']}]},
-{n:'Overkropp volum',fin:null,ex:[
-{id:'ohp',n:'Militærpress',t:'w',sets:3,r:[6,8],rest:120,bar:1,def:40,warm:[[0,10],[.6,5],[.85,2]],alts:['Manual-skulderpress','Skulderpress-maskin']},
-{id:'dips',n:'Dips',t:'w',sets:3,r:[8,12],rest:90,ss:'A',add:1,inc:2.5,def:0,alts:['Dips-maskin','Nedoverbenk manualer']},
-{id:'crow',n:'Kabelroing',t:'w',sets:3,r:[10,12],rest:90,ss:'A',inc:2.5,def:50,alts:['Maskinroing','Hantelroing']},
-{id:'lat',n:'Sidehev',t:'w',sets:3,r:[12,15],rest:60,ss:'B',inc:1,def:8,alts:['Kabelsidehev','Sidehev-maskin']},
-{id:'face',n:'Face pulls',t:'w',sets:3,r:[15,20],rest:60,ss:'B',inc:2.5,def:20,alts:['Omvendt flyes','Band pull-aparts']},
-{id:'bic',n:'Bicepscurl',t:'w',sets:2,r:[10,12],rest:60,ss:'C',inc:1,def:12,alts:['Stangcurl','Kabelcurl']},
-{id:'tri',n:'Triceps pushdown',t:'w',sets:2,r:[10,12],rest:60,ss:'C',inc:2.5,def:25,alts:['Overhead triceps','Skullcrushers']}]},
-{n:'Underkropp volum',fin:'Sykkel eller romaskin',ex:[
-{id:'dl',n:'Markløft',t:'top',top:[3,5],bo:2,boR:[5,5],rest:180,bar:1,def:100,warm:[[.4,5],[.6,3],[.8,2],[.9,1]],alts:['Trap bar-markløft','Rack pulls']},
-{id:'lp',n:'Beinpress',t:'w',sets:3,r:[10,12],rest:120,inc:5,def:120,alts:['Hack squat','Goblet squat']},
-{id:'lc',n:'Leg curl',t:'w',sets:3,r:[10,12],rest:75,ss:'A',inc:2.5,def:35,alts:['Liggende leg curl','Nordic curl']},
-{id:'calf',n:'Tåhev',t:'w',sets:3,r:[12,15],rest:75,ss:'A',inc:5,def:60,alts:['Sittende tåhev','Tåhev i beinpress']}]}
+{n:'Overkropp A',f:'Bryst og sidedelts · mandag',fin:null,ex:[
+{id:'incdb',n:'Skrå manualpress 30°',t:'w',sets:3,r:[6,10],rest:150,inc:2,def:24,warm:[[.5,8],[.75,4]],rir:[2,1],alts:['Skrå Smith-press','Skrå maskinpress']},
+{id:'mchest',n:'Maskin brystpress',t:'w',sets:2,r:[8,12],rest:120,inc:5,def:60,rir:[1,0],alts:['Smith-benkpress','Flat manualpress']},
+{id:'csrow',n:'Brystforankret roing',t:'w',sets:3,r:[10,12],rest:120,inc:2.5,def:40,rir:[1,0],llp:1,alts:['Meadows row','Sittende kabelroing']},
+{id:'clat',n:'Kabel sidehev',t:'w',sets:3,r:[10,15],rest:75,inc:2.5,def:7.5,rir:[1,0],llp:1,note:'Kabel i håndhøyde',alts:['Lean-in manual sidehev','Sidehev-maskin']},
+{id:'ohtri',n:'Overhead kabel triceps (stang)',t:'w',sets:3,r:[10,12],rest:75,inc:2.5,def:25,rir:[1,0],alts:['Enarms manual overhead','Katana kabel triceps']}]},
+{n:'Bein',f:'Quads, hamstrings, glutes, legger · tirsdag',fin:null,ex:[
+{id:'hack',n:'Hack squat',t:'w',sets:3,r:[6,10],rest:180,inc:5,def:80,warm:[[.4,8],[.7,4],[.85,2]],rir:[2,1],note:'Ikke til failure',alts:['Smith-knebøy','Knebøy','45° beinpress']},
+{id:'rdl',n:'Rumensk markløft',t:'w',sets:3,r:[8,10],rest:150,bar:1,def:70,warm:[[.6,5]],rir:[2,2],alts:['Hantel-RDL','Smith-RDL']},
+{id:'slc',n:'Sittende leg curl',t:'w',sets:3,r:[6,10],rest:105,inc:2.5,def:45,rir:[1,0],llp:1,alts:['Liggende leg curl','Nordic curl']},
+{id:'lext',n:'Leg extension',t:'w',sets:3,r:[10,15],rest:90,inc:2.5,def:50,rir:[1,0],llp:1,alts:['Sissy squat','Reverse nordic']},
+{id:'bulg',n:'Bulgarsk utfall (per bein)',t:'w',sets:2,r:[8,12],rest:90,inc:2,def:16,rir:[2,1],alts:['Gående utfall','Smith split squat']},
+{id:'calf',n:'Stående leggløft',t:'w',sets:3,r:[8,12],rest:60,inc:5,def:60,rir:[1,0],note:'2 sek pause nederst i strekk',alts:['Tåhev i beinpress','Sittende tåhev']}]},
+{n:'Overkropp B',f:'Rygg, bakre delts, biceps · torsdag',fin:null,ex:[
+{id:'pdown',n:'Nedtrekk, bredt grep',t:'w',sets:3,r:[8,12],rest:120,inc:5,def:55,warm:[[.5,8]],rir:[1,0],llp:1,alts:['Nedtrekk nøytralt grep','Enarms nedtrekk']},
+{id:'crow',n:'Sittende kabelroing',t:'w',sets:2,r:[8,12],rest:120,inc:2.5,def:50,rir:[1,0],alts:['Maskinroing','Brystforankret roing']},
+{id:'mshp',n:'Maskin skulderpress',t:'w',sets:2,r:[8,10],rest:120,inc:5,def:40,rir:[2,1],alts:['Manual-skulderpress','Smith skulderpress']},
+{id:'cfly',n:'Sittende kabelflyes',t:'w',sets:3,r:[10,15],rest:90,inc:2.5,def:15,rir:[1,0],alts:['Pec deck','Manualflyes']},
+{id:'rcross',n:'Reverse kabel crossover',t:'w',sets:3,r:[12,15],rest:60,inc:2.5,def:5,rir:[1,0],note:'Hold i kablene, ikke håndtakene',alts:['Reverse pec deck','Face pulls']},
+{id:'inccurl',n:'Skrå manualcurl',t:'w',sets:3,r:[8,12],rest:75,inc:2,def:10,rir:[1,0],alts:['Bayesian kabelcurl','Preacher curl']},
+{id:'lat',n:'Lean-in manual sidehev',t:'w',sets:2,r:[12,15],rest:60,inc:1,def:8,rir:[1,0],alts:['Kabel sidehev','Sidehev-maskin']}]},
+{n:'Overkropp C',f:'Tung benk, pull-ups, armer · lørdag',fin:null,ex:[
+{id:'bench',n:'Benkpress',t:'top',top:[5,6],bo:2,boR:[8,10],rest:180,bar:1,def:60,warm:W1,rir:[2,1],alts:['Manualpress flat','Smith-benkpress','Chest press-maskin']},
+{id:'pull',n:'Pull-ups',t:'w',sets:3,r:[6,10],rest:150,add:1,inc:2.5,def:0,warm:[[-1,5]],rir:[1,0],llp:1,note:'Legg på vekt når du klarer 10',alts:['Nedtrekk nøytralt grep','Assistert pull-up']},
+{id:'yraise',n:'Kabel Y-hev',t:'w',sets:3,r:[12,15],rest:60,inc:2.5,def:5,rir:[1,0],alts:['Kabel sidehev','Lean-in manual sidehev']},
+{id:'bcurl',n:'Bayesian kabelcurl',t:'w',sets:3,r:[10,15],rest:90,ss:'A',inc:2.5,def:10,rir:[1,0],note:'Arm bak kroppen',alts:['Kabelcurl','Skrå manualcurl']},
+{id:'katana',n:'Katana kabel triceps',t:'w',sets:3,r:[10,15],rest:90,ss:'A',inc:2.5,def:10,rir:[1,0],alts:['Overhead kabel triceps','Skullcrushers']},
+{id:'rpec',n:'Reverse pec deck, sideveis',t:'w',sets:2,r:[12,15],rest:60,inc:2.5,def:25,rir:[1,0],alts:['Reverse kabel crossover','Face pulls']},
+{id:'ccr',n:'Kabel crunch',t:'w',sets:3,r:[10,15],rest:60,inc:2.5,def:30,rir:[2,1],alts:['Hengende beinhev','Ab wheel']}]}
 ];
-const MAIN=[['bench','Benk'],['squat','Knebøy'],['dl','Markløft'],['pull','Pull-ups']];
+const MAIN=[['bench','Benk'],['hack','Hack squat'],['pull','Pull-ups'],['incdb','Skrå manual']];
 const ALL={};P.forEach(d=>d.ex.forEach(e=>ALL[e.id]=e));
 const KEY='styrke_app_v1';let noStore=false;
 function load(){try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){noStore=true;return null}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){noStore=true}}
-let S=load()||{settings:{has125:true},deload:false,nextDay:0,sessions:[],active:null};
+let S=load()||{settings:{has125:true},deload:false,intro:false,nextDay:0,sessions:[],active:null,prog:PROG};
+// Nytt program: start på dag 1 og forkast en påbegynt økt fra det gamle programmet. Historikken beholdes.
+if(S.prog!==PROG){S.prog=PROG;S.nextDay=0;S.active=null;S.intro=true;save()}
 let ui={view:S.active?'work':'home',sel:S.nextDay,lift:'bench',alts:false,editT:false,err:'',io:null,ioErr:'',copied:false,sum:null,cf:''};
 let draft=null,beeped=true,lastPh=-2,charts=[],ac=null,wl=null;
 const fmt=n=>n==null||isNaN(n)?'–':String(Math.round(n*100)/100).replace('.',',');
@@ -82,37 +93,41 @@ const mmss=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%6
 const rt=r=>r[0]===r[1]?String(r[0]):r[0]+'–'+r[1];
 const e1=(w,r)=>w>0&&r>0?w*(1+r/30):0;
 const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const dl=(n,d)=>d?Math.max(1,Math.round(n*.6)):n;
+const dl=(n,d)=>d?Math.max(1,Math.round(n*.5)):n;
 function stepFor(d){return d.bar?(S.settings.has125?2.5:5):(d.inc||2.5)}
 function rnd(w,st){return w==null?null:Math.round(w/st)*st}
 function keyOf(id){return S.active&&S.active.subs[id]?id+'|'+S.active.subs[id]:id}
 function defOf(key){if(key.indexOf('|')<0)return ALL[key];const[id,alt]=key.split('|');const b=ALL[id];return Object.assign({},b,{id:key,n:alt,bar:0,def:null,warm:null,bw:0,add:0,inc:b.bar?2.5:(b.inc||2.5)})}
 function wTxt(d,w){if(d.bw)return 'Kroppsvekt';if(w==null)return 'Velg vekt';if(d.add)return w>0?'+'+fmt(w)+' kg':'Kroppsvekt';return fmt(w)+' kg'}
 function hist(key){return S.sessions.filter(s=>!s.deload&&s.ex[key]&&s.ex[key].sets.some(x=>x.k!=='warm')).reverse()}
-function isMiss(d,sets){if(d.t==='top'){const s=sets.find(x=>x.k==='top');return s?(s.r<d.top[0]||(s.rpe||8)>=10):false}return sets.filter(x=>x.k==='work').some(x=>x.r<d.r[0]||(x.rpe||8)>=10)}
+// Failure (RPE 10) er planlagt på siste sett, så bare reps under intervallet teller som bom på vanlige øvelser.
+function isMiss(d,sets){if(d.t==='top'){const s=sets.find(x=>x.k==='top');return s?(s.r<d.top[0]||(s.rpe||8)>=10):false}return sets.filter(x=>x.k==='work').some(x=>x.r<d.r[0])}
+function effort(it,d){if(it.k==='warm')return 'Lett og raskt';const A=S.active;if(A&&A.deload)return 'RIR 3, ingen LLP';if(A&&A.intro)return 'RIR 2–3, ingen LLP (introuke)';
+const R=d.rir||[2,1],last=it.k==='top'||(it.k==='work'&&it.i===it.n-1),r=last?R[1]:R[0];
+return 'RIR '+r+(r===0?' (failure)':'')+(last&&d.llp?' + LLP':'')}
 function computeTarget(key,deload){
 const d=defOf(key),st=stepFor(d),inc=d.bar?st:(d.inc||2.5),h=hist(key),R=d.t==='top'?d.top:d.r;
 let T={w:d.bw?0:d.def,goal:R[0],status:'new',note:d.def==null?'Velg vekt for '+d.n:'Første gang: juster vekten',prev:[]};
 if(h.length){const sets=h[0].ex[key].sets;T.prev=sets;let ref,up;
 if(d.t==='top'){ref=sets.find(x=>x.k==='top')||sets.find(x=>x.k!=='warm');up=ref.k==='top'&&ref.r>=R[1]&&(ref.rpe||8)<=8}
-else{const ws=sets.filter(x=>x.k==='work');ref=ws[0];up=ws.length>0&&ws.every(x=>x.r>=R[1])&&ws.reduce((a,x)=>a+(x.rpe||8),0)/ws.length<=8}
+else{const ws=sets.filter(x=>x.k==='work');if(ws.length){ref=ws[0];up=ws.every(x=>x.r>=R[1])}else{ref=sets.find(x=>x.k!=='warm');up=false}}
 const w=ref.w,miss=isMiss(d,sets);
 if(d.bw){T.w=0;if(up){T.status='up';T.goal=R[1];T.note='Toppen nådd: prøv tyngre variant'}else{T.status='hold';T.goal=null;T.note='Én rep mer per sett'}}
 else if(up){T.w=rnd(w+inc,st);T.status='up';T.goal=R[0];T.note='Ny vekt: +'+fmt(inc)+' kg'}
 else if(miss){const pm=h[1]&&isMiss(d,h[1].ex[key].sets);if(pm){T.w=rnd(w*.95,st);T.status='down';T.note='To bom på rad: ned 5 %'}else{T.w=w;T.status='miss';T.note='Bom sist: samme vekt'}T.goal=R[0]}
-else{T.w=w;T.status='hold';T.goal=d.t==='top'?Math.min(R[1],ref.r+1):null;T.note=(ref.rpe||8)>=9?'RPE 9 sist: samme vekt':'Samme vekt, én rep mer'}}
+else{T.w=w;T.status='hold';T.goal=d.t==='top'?Math.min(R[1],ref.r+1):null;T.note=d.t==='top'&&(ref.rpe||8)>=9?'RPE 9 sist: samme vekt':'Samme vekt, én rep mer'}}
 if(deload&&T.w!=null){T.w=rnd(T.w*.9,st);T.goal=R[0];T.status='deload';T.note='Deload: lett uke'}
 return T}
 function buildQueue(day,deload){const ex=P[day].ex,q=[];let i=0;
 while(i<ex.length){const e=ex[i];
 if(e.ss&&ex[i+1]&&ex[i+1].ss===e.ss){const a=e,b=ex[i+1],na=dl(a.sets,deload),nb=dl(b.sets,deload);for(let s=0;s<Math.max(na,nb);s++){if(s<na)q.push({ex:a.id,k:'work',i:s,n:na,ss:1,rest:s<nb?0:a.rest});if(s<nb)q.push({ex:b.id,k:'work',i:s,n:nb,ss:2,rest:b.rest})}i+=2;continue}
-if(e.warm)e.warm.forEach((x,j)=>q.push({ex:e.id,k:'warm',i:j,n:e.warm.length,pct:x[0],reps:x[1],rest:j===e.warm.length-1?90:45}));
+if(e.warm)e.warm.forEach((x,j)=>q.push({ex:e.id,k:'warm',i:j,n:e.warm.length,pct:x[0],reps:x[1],rest:j===e.warm.length-1?60:0}));
 if(e.t==='top'){q.push({ex:e.id,k:'top',i:0,n:1,rest:e.rest});const nb=dl(e.bo,deload);for(let s=0;s<nb;s++)q.push({ex:e.id,k:'back',i:s,n:nb,rest:120})}
 else{const n=dl(e.sets,deload);for(let s=0;s<n;s++)q.push({ex:e.id,k:'work',i:s,n,rest:e.rest})}
 i++}return q}
 function itemInfo(it){const A=S.active,key=keyOf(it.ex),d=defOf(key);if(!A.targets[key])A.targets[key]=computeTarget(key,A.deload);
 const T=A.targets[key],st=stepFor(d),logs=A.logs[key]||[];let w,range,goal=null,prev=null,label;
-if(it.k==='warm'){w=it.pct===-1?0:it.pct===0?20:Math.max(20,rnd(T.w*it.pct,st));range=[it.reps,it.reps];label='Oppvarming '+(it.i+1)+'/'+it.n}
+if(it.k==='warm'){w=it.pct===-1?0:it.pct===0?20:T.w==null?null:d.bar?Math.max(20,rnd(T.w*it.pct,st)):rnd(T.w*it.pct,st);range=[it.reps,it.reps];label='Oppvarming '+(it.i+1)+'/'+it.n}
 else{const same=logs.filter(x=>x.k===it.k);
 if(it.k==='top'){w=T.w;range=d.top;label='Toppsett'}
 else if(it.k==='back'){const tp=logs.find(x=>x.k==='top');const base=tp&&tp.w!=null?tp.w:T.w;w=same.length?same[same.length-1].w:(base==null?null:rnd(base*.875,st));range=d.boR;label='Backoff '+(it.i+1)+'/'+it.n}
@@ -126,7 +141,7 @@ function icon(s){if(s==='up')return '<i class="ti ti-trending-up" style="color:v
 async function wake(){try{if('wakeLock' in navigator&&S.active&&!wl){wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>{wl=null})}}catch(e){}}
 function unlock(){if(!ac){try{ac=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(ac&&ac.state==='suspended')ac.resume();wake()}
 function beep(f,ms,n){if(ac){for(let k=0;k<n;k++){const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;o.connect(g);g.connect(ac.destination);const t=ac.currentTime+k*.25;g.gain.setValueAtTime(.2,t);g.gain.exponentialRampToValueAtTime(.001,t+ms/1000);o.start(t);o.stop(t+ms/1000)}}try{navigator.vibrate&&navigator.vibrate(200)}catch(e){}}
-function start(day){S.active={day,deload:S.deload,start:Date.now(),q:[],idx:0,logs:{},subs:{},targets:{},phase:'sets',restEnd:0,restTot:0,fin:null};S.active.q=buildQueue(day,S.deload);P[day].ex.forEach(e=>S.active.targets[e.id]=computeTarget(e.id,S.deload));draft=null;ui.view='work';save();wake();render()}
+function start(day){S.active={day,deload:S.deload,intro:!!S.intro,start:Date.now(),q:[],idx:0,logs:{},subs:{},targets:{},phase:'sets',restEnd:0,restTot:0,fin:null};S.active.q=buildQueue(day,S.deload);P[day].ex.forEach(e=>S.active.targets[e.id]=computeTarget(e.id,S.deload));draft=null;ui.view='work';save();wake();render()}
 function afterSets(){const A=S.active;if(P[A.day].fin){A.phase='fin';A.fin={el:0,run:false,t0:0};A.restEnd=0;save()}else finish()}
 function complete(){const A=S.active,it=A.q[A.idx],I=itemInfo(it);const w=I.d.bw?0:num(draft.w);
 if(!I.d.bw&&(w==null||w<0)){ui.err='Skriv inn vekt først';render();return}
@@ -153,8 +168,8 @@ function homeHTML(){const A=S.active,d=ui.sel,D=P[d];let h='';
 if(noStore)h+='<div class="cd mu"><i class="ti ti-alert-triangle"></i> Lagring er ikke tilgjengelig. Bruk eksport for å ta vare på loggen.</div>';
 if(A)h+=`<div class="cd"><div class="mu">Økt pågår</div><div style="font-size:18px;font-weight:500;margin:2px 0 12px">Dag ${A.day+1} · ${P[A.day].n}</div><button class="pr" data-a="resume"><i class="ti ti-player-play"></i> Fortsett økt</button><button data-a="discard" style="width:100%;margin-top:8px">${ui.cf==='discard'?'Trykk igjen for å forkaste':'Forkast økt'}</button></div>`;
 h+='<div class="g2" style="margin-bottom:12px">'+P.map((p,i)=>`<button data-a="sel" data-v="${i}" class="${i===d?'on':''}" style="height:auto;padding:8px 10px;text-align:left"><div style="font-weight:500;font-size:14px">Dag ${i+1}${i===S.nextDay?' · neste':''}</div><div style="font-size:12px;color:inherit">${p.n}</div></button>`).join('')+'</div>';
-h+=`<div class="cd"><div class="r sb"><div><div class="mu">${d===S.nextDay?'Neste økt':'Valgt økt'}</div><div style="font-size:18px;font-weight:500">${D.n}</div></div>${S.deload?'<span class="ch">Deload</span>':''}</div><div style="margin:10px 0 14px">`+D.ex.map(e=>{const T=computeTarget(e.id,S.deload);return `<div class="li"><span style="min-width:0">${e.ss?'<span class="mu">'+e.ss+' </span>':''}${e.n}</span><span style="white-space:nowrap">${T.status==='up'||T.status==='down'||T.status==='miss'?icon(T.status)+' ':''}${wTxt(e,T.w)} × ${e.t==='top'?T.goal:rt(e.r)}</span></div>`}).join('')+(D.fin?`<div class="li"><span>Intervaller <span class="mu">· ${D.fin}</span></span><span>6 × 30/60</span></div>`:'')+'</div>'+(A?'':'<button class="pr" data-a="start"><i class="ti ti-barbell"></i> Start økt</button>')+'</div>';
-h+=`<div class="cd"><div class="li" style="border-top:none;padding-top:0"><div><div>Deload-uke</div><div class="mu">Ca. 60 % volum, 10 % lettere</div></div><button data-a="deload" class="${S.deload?'on':''}" style="min-width:64px">${S.deload?'På':'Av'}</button></div><div class="li" style="padding-bottom:0"><div><div>1,25 kg-skiver</div><div class="mu">Av = stanga går i hopp på 5 kg</div></div><button data-a="p125" class="${S.settings.has125?'on':''}" style="min-width:64px">${S.settings.has125?'På':'Av'}</button></div></div>`;
+h+=`<div class="cd"><div class="r sb"><div><div class="mu">${d===S.nextDay?'Neste økt':'Valgt økt'}</div><div style="font-size:18px;font-weight:500">${D.n}</div><div class="mu">${D.f||''}</div></div>${S.deload?'<span class="ch">Deload</span>':S.intro?'<span class="ch">Introuke</span>':''}</div><div style="margin:10px 0 14px">`+D.ex.map(e=>{const T=computeTarget(e.id,S.deload);return `<div class="li"><span style="min-width:0">${e.ss?'<span class="mu">'+e.ss+' </span>':''}${e.n}</span><span style="white-space:nowrap">${T.status==='up'||T.status==='down'||T.status==='miss'?icon(T.status)+' ':''}${wTxt(e,T.w)} × ${e.t==='top'?T.goal:rt(e.r)}</span></div>`}).join('')+(D.fin?`<div class="li"><span>Intervaller <span class="mu">· ${D.fin}</span></span><span>6 × 30/60</span></div>`:'')+'</div>'+(A?'':'<button class="pr" data-a="start"><i class="ti ti-barbell"></i> Start økt</button>')+'</div>';
+h+=`<div class="cd"><div class="li" style="border-top:none;padding-top:0"><div><div>Introuke (uke 1)</div><div class="mu">RIR 2–3 på alle sett, ingen LLP</div></div><button data-a="intro" class="${S.intro?'on':''}" style="min-width:64px">${S.intro?'På':'Av'}</button></div><div class="li"><div><div>Deload-uke (uke 7)</div><div class="mu">Halve sett, 10 % lettere, RIR 3</div></div><button data-a="deload" class="${S.deload?'on':''}" style="min-width:64px">${S.deload?'På':'Av'}</button></div><div class="li" style="padding-bottom:0"><div><div>1,25 kg-skiver</div><div class="mu">Av = stanga går i hopp på 5 kg</div></div><button data-a="p125" class="${S.settings.has125?'on':''}" style="min-width:64px">${S.settings.has125?'På':'Av'}</button></div></div>`;
 const ls=liftSeries(ui.lift),ix=indexSeries();
 h+='<div class="cd"><div style="font-weight:500;margin-bottom:8px">Fremgang</div><div class="g2" style="margin-bottom:10px">'+MAIN.map(([id,n])=>`<button data-a="lift" data-v="${id}" class="${ui.lift===id?'on':''}">${n}</button>`).join('')+'</div>'+(ls.length?'<div class="mu">Estimert 1RM (kg)</div><div style="position:relative;height:180px;margin:6px 0 14px"><canvas id="c1"></canvas></div>':'<div class="mu" style="padding:8px 0 4px">Fullfør en økt med denne øvelsen for å se grafen.</div>')+(ix.length?'<div class="mu">Total styrkeindeks (start = 100)</div><div style="position:relative;height:140px;margin-top:6px"><canvas id="c2"></canvas></div>':'')+'</div>';
 if(S.sessions.length)h+='<div class="cd"><div style="font-weight:500;margin-bottom:4px">Historikk</div>'+S.sessions.slice(-5).reverse().map(s=>{const dt=new Date(s.date);return `<div class="li"><span>Økt ${s.n} <span class="mu">· Dag ${s.day+1} · ${dt.getDate()}.${dt.getMonth()+1}.</span></span><span class="mu">${(s.vol/1000).toFixed(1).replace('.',',')} t · ${s.met}/${s.tot}</span></div>`}).join('')+'</div>';
@@ -165,7 +180,7 @@ return h+'</div>'}
 function finHTML(){const A=S.active,F=A.fin,done=F.el>=540,D=P[A.day];
 return `<div class="cd"><div class="mu">Avslutning · ${D.fin}</div><div style="font-size:18px;font-weight:500;margin-bottom:12px">6 × 30 sek hardt / 60 sek rolig</div>`+(done?'<div style="text-align:center;padding:1.5rem 0"><i class="ti ti-flame" style="font-size:24px;color:var(--text-success)"></i><div style="font-size:18px;font-weight:500;margin-top:6px">Intervaller ferdig</div></div><button class="pr" data-a="finDone">Fullfør økt</button>':`<div id="finBox" style="text-align:center;padding:1.25rem 0;border-radius:12px;background:var(--surface-1);margin-bottom:10px"><div id="finP" style="font-size:18px;font-weight:500">Hardt</div><div id="finT" style="font-size:44px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.2">0:30</div><div id="finR" class="mu">Runde 1 av 6</div></div><div class="bar" style="margin-bottom:12px"><div id="finBar" style="width:0%"></div></div><button class="pr" data-a="finT">${F.run?'Pause':(F.el>0?'Fortsett':'Start intervaller')}</button><button data-a="finSkip" style="width:100%;margin-top:8px">Hopp over og fullfør</button>`)+'</div>'}
 function workHTML(){const A=S.active,D=P[A.day];
-const head=`<div class="r sb" style="margin-bottom:6px"><span class="mu">Dag ${A.day+1} · ${D.n}${A.deload?' · deload':''}</span><span class="mu"><i class="ti ti-clock"></i> <span id="el" style="font-variant-numeric:tabular-nums">0:00</span></span></div>`;
+const head=`<div class="r sb" style="margin-bottom:6px"><span class="mu">Dag ${A.day+1} · ${D.n}${A.deload?' · deload':A.intro?' · introuke':''}</span><span class="mu"><i class="ti ti-clock"></i> <span id="el" style="font-variant-numeric:tabular-nums">0:00</span></span></div>`;
 if(A.phase==='fin')return head+finHTML();
 const it=A.q[A.idx],I=itemInfo(it),T=I.T,sub=A.subs[it.ex];
 if(!draft||draft.idx!==A.idx)draft={idx:A.idx,w:I.d.bw?'0':(I.w==null?'':fmt(I.w)),r:String(it.k==='warm'?it.reps:(I.goal!=null?I.goal:I.range[0])),rpe:null};
@@ -176,9 +191,9 @@ h+=`<div class="cd"><div class="r sb" style="align-items:flex-start"><div style=
 <div class="r sb" style="margin-top:8px"><div style="min-width:0"><div style="font-size:14px">Dagens mål: <span style="font-weight:500">${dagMal}</span></div><div class="mu">${icon(T.status)} ${T.note}</div></div><button data-a="editT" style="height:32px;font-size:13px;padding:0 10px;flex:none">Endre</button></div>
 ${ui.editT?`<div class="r" style="margin-top:8px"><input id="tIn" inputmode="decimal" placeholder="${T.w==null?'80':fmt(T.w)}" style="flex:1;min-width:0"><button data-a="setT">Oppdater</button></div>`:''}
 <div style="border-top:0.5px solid var(--border);margin-top:12px;padding-top:12px"><div class="mu">Neste</div><div style="font-size:30px;font-weight:500;line-height:1.25">${wTxt(I.d,I.w)} × ${it.k==='warm'?it.reps:rt(I.range)}</div>${I.d.bar&&I.w>0&&!sub?'<div class="mu" style="margin-top:2px"><i class="ti ti-circles"></i> '+plates(I.w)+'</div>':''}</div>
-<div style="margin:10px 0 12px;font-size:14px"><div class="r sb" style="padding:3px 0"><span class="mu">Forrige</span><span>${I.prev?wTxt(I.d,I.prev.w)+' × '+I.prev.r+(I.prev.rpe?' @ '+I.prev.rpe:''):'–'}</span></div><div class="r sb" style="padding:3px 0"><span class="mu">Mål</span><span>${it.k==='warm'?'Lett og raskt':goalText(I)}</span></div><div class="r sb" style="padding:3px 0"><span class="mu">Hvile etter</span><span>${it.rest?mmss(it.rest):'Rett til neste øvelse'}</span></div></div>
+<div style="margin:10px 0 12px;font-size:14px"><div class="r sb" style="padding:3px 0"><span class="mu">Forrige</span><span>${I.prev?wTxt(I.d,I.prev.w)+' × '+I.prev.r+(I.prev.rpe?' @ '+I.prev.rpe:''):'–'}</span></div><div class="r sb" style="padding:3px 0"><span class="mu">Mål</span><span>${it.k==='warm'?'Lett og raskt':goalText(I)}</span></div>${it.k!=='warm'?'<div class="r sb" style="padding:3px 0"><span class="mu">Innsats</span><span style="font-weight:500">'+effort(it,I.d)+'</span></div>':''}${I.d.note&&it.k!=='warm'?'<div class="r sb" style="padding:3px 0"><span class="mu">Tips</span><span style="text-align:right">'+I.d.note+'</span></div>':''}<div class="r sb" style="padding:3px 0"><span class="mu">Hvile etter</span><span>${it.rest?mmss(it.rest):'Rett til neste øvelse'}</span></div></div>
 <div class="g2"><div><div class="mu" style="margin-bottom:4px">${I.d.add?'Ekstra vekt (kg)':'Vekt (kg)'}</div>${I.d.bw?'<div class="mu" style="height:44px;display:flex;align-items:center">Kroppsvekt</div>':`<div class="r st" style="gap:4px"><button data-a="wm">−</button><input id="wIn" inputmode="decimal" value="${draft.w}"><button data-a="wp">+</button></div>`}</div><div><div class="mu" style="margin-bottom:4px">Reps</div><div class="r st" style="gap:4px"><button data-a="rm">−</button><input id="rIn" inputmode="numeric" value="${draft.r}"><button data-a="rp">+</button></div></div></div>
-${it.k!=='warm'?'<div class="mu" style="margin:12px 0 4px">RPE <span style="color:var(--text-muted)">· 8 = 2 reps igjen</span></div><div class="r" style="gap:6px">'+[6,7,8,9,10].map(v=>`<button data-a="rpe" data-v="${v}" class="${draft.rpe===v?'on':''}" style="flex:1;padding:0">${v}</button>`).join('')+'</div>':''}
+${it.k!=='warm'?'<div class="mu" style="margin:12px 0 4px">RPE <span style="color:var(--text-muted)">· 8 = 2 reps igjen, 10 = failure</span></div><div class="r" style="gap:6px">'+[6,7,8,9,10].map(v=>`<button data-a="rpe" data-v="${v}" class="${draft.rpe===v?'on':''}" style="flex:1;padding:0">${v}</button>`).join('')+'</div>':''}
 ${ui.err?'<div style="color:var(--text-danger);font-size:13px;margin-top:8px">'+ui.err+'</div>':''}
 <button class="pr" data-a="done" style="margin-top:14px"><i class="ti ti-check"></i> Fullført sett</button>
 <div class="g2" style="margin-top:8px"><button data-a="alts"><i class="ti ti-replace"></i> Utstyr opptatt</button><button data-a="skip">Hopp over sett</button></div>
@@ -217,7 +232,8 @@ case 'resume':ui.view='work';break;
 case 'discard':case 'disc2':S.active=null;draft=null;ui.view='home';save();break;
 case 'end':finish();return;
 case 'home':ui.view='home';ui.io=null;break;
-case 'deload':S.deload=!S.deload;save();break;
+case 'deload':S.deload=!S.deload;if(S.deload)S.intro=false;save();break;
+case 'intro':S.intro=!S.intro;if(S.intro)S.deload=false;save();break;
 case 'p125':S.settings.has125=!S.settings.has125;save();break;
 case 'lift':ui.lift=v;break;
 case 'wm':case 'wp':{const I=itemInfo(A.q[A.idx]);const st=I.d.bar?I.st:(I.d.inc||2.5);const cur=num(draft.w)||0;draft.w=fmt(Math.max(0,Math.round((cur+(a==='wp'?st:-st))*100)/100));ui.err='';break}
