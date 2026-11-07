@@ -87,7 +87,9 @@ const MAIN=[['bench','Benk'],['hack','Hack squat'],['pull','Pull-ups'],['incdb',
 const ALL={};P.forEach(d=>d.ex.forEach(e=>ALL[e.id]=e));
 const KEY='styrke_app_v1';let noStore=false;
 function load(){try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){noStore=true;return null}}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){noStore=true}}
+function metaObj(){return{settings:S.settings,nextDay:S.nextDay,block:S.block}}
+// Lagrer lokalt. Endres innstillinger, neste dag eller blokk, får de nytt tidsstempel så synken vet hvilken versjon som er nyest.
+function save(){if(S&&S.sync){const sig=JSON.stringify(metaObj());if(sig!==S.sync.sig){S.sync.sig=sig;S.sync.mu=Date.now()}}try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){noStore=true}}
 let S=load()||{settings:{has125:true},nextDay:0,sessions:[],active:null,prog:PROG};
 // Nytt program: start på dag 1 og forkast en påbegynt økt fra det gamle programmet. Historikken beholdes.
 // Programbytte: forkast en påbegynt økt. Fra program 2 beholdes dagrekkefølgen (samme fire dager), ellers start på dag 1.
@@ -104,7 +106,36 @@ return{w,inWeek:done%PER_WEEK+1,intro:w===1&&S.block.n===1,deload:w===DELOAD_WEE
 function sinceBackup(){return S.sessions.length-(S.backup.n||0)}
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){navigator.serviceWorker.register('sw.js').catch(()=>{})}
-let ui={view:S.active?'work':'home',sel:S.nextDay,lift:'bench',alts:false,editT:false,err:'',io:null,ioErr:'',copied:false,sum:null,cf:'',msg:'',pending:null};
+// ---- Synk med sky (Cloudflare Pages Function i functions/api/sync.js) ----
+// Økter legges bare til og identifiseres med datoen sin, så sammenslåing mellom enheter er trygg.
+// Nøkkelen lagres for seg selv på enheten og kommer aldri med i backup-fila.
+const SYNC_LS='styrke_sync_key';
+function syncKey(){try{return localStorage.getItem(SYNC_LS)||''}catch(e){return ''}}
+function setSyncKey(v){try{v?localStorage.setItem(SYNC_LS,v):localStorage.removeItem(SYNC_LS);return true}catch(e){return false}}
+function freshSync(){return{cursor:0,mu:0,sig:JSON.stringify(metaObj()),linked:false,at:null,err:'',total:null}}
+if(!S.sync)S.sync=freshSync();
+let syncing=false;
+function mergeSessions(arr){const have=new Set(S.sessions.map(s=>s.date));let added=0;
+arr.forEach(s=>{if(s&&typeof s.date==='string'&&s.ex&&!have.has(s.date)){s.sy=1;S.sessions.push(s);have.add(s.date);added++}});
+if(added){S.sessions.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);S.sessions.forEach((s,i)=>s.n=i+1)}return added}
+function applyMeta(m){const d=m.data||{};if(d.settings)S.settings=d.settings;if(typeof d.nextDay==='number')S.nextDay=d.nextDay;if(d.block&&typeof d.block.start==='number')S.block=d.block;
+S.sync.sig=JSON.stringify(metaObj());S.sync.mu=m.updated||0;if(!S.active)ui.sel=S.nextDay}
+async function syncNow(manual){const key=syncKey();if(!key||syncing)return;if(!manual&&(S.active||!navigator.onLine))return;
+syncing=true;ui.syncing=true;if(manual)render();
+const first=!S.sync.linked;let since=first?0:(S.sync.cursor||0),out=S.sessions.filter(s=>first||!s.sy),more=true,last=null,guard=0,added=0;
+try{while(more&&guard++<50){
+const body={since,sessions:out.map(({sy,...rest})=>rest),meta:{data:metaObj(),updated:first?0:(S.sync.mu||0)}};let r;
+try{r=await fetch('api/sync',{method:'POST',cache:'no-store',headers:{'content-type':'application/json',authorization:'Bearer '+key},body:JSON.stringify(body)})}catch(e){throw new Error('Ingen kontakt med serveren. Prøver igjen når du er på nett.')}
+if(r.status===401){setSyncKey('');throw new Error('Feil synk-nøkkel. Skriv den inn på nytt.')}
+if(r.status===404||r.status===405)throw new Error('Fant ikke synk-serveren. Synk virker bare på Cloudflare-adressen til appen.');
+const j=await r.json().catch(()=>null);if(!r.ok||!j)throw new Error((j&&j.error)||('Feil fra serveren ('+r.status+')'));
+out.forEach(s=>s.sy=1);out=[];added+=mergeSessions(j.sessions||[]);since=j.cursor||since;more=!!j.more;last=j}
+S.sync.cursor=since;if(last.meta&&(first||last.meta.updated>(S.sync.mu||0)))applyMeta(last.meta);
+S.sync.linked=true;S.sync.at=new Date().toISOString();S.sync.err='';S.sync.total=last.total;S.backup={n:S.sessions.length,date:S.sync.at};
+if(manual||added)ui.syncMsg=added?'Hentet '+added+(added===1?' økt':' økter')+' fra skyen':'Alt er synket';
+}catch(e){S.sync.err=e&&e.message?e.message:'Kunne ikke synke'}
+syncing=false;ui.syncing=false;save();if(!S.active||manual)render()}
+let ui={view:S.active?'work':'home',sel:S.nextDay,lift:'bench',alts:false,editT:false,err:'',io:null,ioErr:'',copied:false,sum:null,cf:'',msg:'',pending:null,syncing:false,syncMsg:''};
 let draft=null,beeped=true,lastPh=-2,charts=[],ac=null,wl=null;
 const fmt=n=>n==null||isNaN(n)?'–':String(Math.round(n*100)/100).replace('.',',');
 const num=v=>{if(v==null||v==='')return null;const x=parseFloat(String(v).replace(',','.'));return isNaN(x)?null:x};
@@ -177,7 +208,7 @@ const T=A.targets[key],p=(T&&T.prev||[]).find(x=>x.k===g[0].k&&x.i===g[0].i);
 if(p&&!A.deload){const dw=(g[0].w||0)-(p.w||0);if(Math.abs(dw)>.01)changes.push({t:d.n+': '+(dw>0?'+':'')+fmt(dw)+' kg',up:dw>0});else if(g[0].r!==p.r){const dr=g[0].r-p.r;changes.push({t:d.n+': '+(dr>0?'+':'')+dr+(Math.abs(dr)===1?' rep':' reps'),up:dr>0})}}
 const best=Math.max(0,...g.map(x=>e1(x.w,x.r)));if(best>0){const pb=Math.max(0,...S.sessions.filter(s=>s.ex[key]).flatMap(s=>s.ex[key].sets.filter(x=>x.k!=='warm').map(x=>e1(x.w,x.r))));if(pb>0&&best>pb+.01)prs.push(d.n+': e1RM '+fmt(Math.round(best*2)/2)+' kg')}});
 const rec={n:S.sessions.length+1,day:A.day,date:new Date().toISOString(),dur,deload:A.deload,intro:!!A.intro,week:A.week,ex,vol,met,tot,changes,prs};
-if(tot>0){S.sessions.push(rec);S.nextDay=(A.day+1)%4}S.active=null;draft=null;ui.sum=rec;ui.sel=S.nextDay;ui.view=tot>0?'sum':'home';save();if(wl){try{wl.release()}catch(e){}}render()}
+if(tot>0){S.sessions.push(rec);S.nextDay=(A.day+1)%4}S.active=null;draft=null;ui.sum=rec;ui.sel=S.nextDay;ui.view=tot>0?'sum':'home';save();if(wl){try{wl.release()}catch(e){}}render();syncNow()}
 function liftSeries(id){return S.sessions.filter(s=>s.ex[id]&&s.ex[id].sets.some(x=>x.k!=='warm')).map(s=>({l:'Økt '+s.n,y:Math.round(Math.max(0,...s.ex[id].sets.filter(x=>x.k!=='warm').map(x=>e1(x.w,x.r)))*2)/2}))}
 function indexSeries(){const first={},last={},out=[];S.sessions.forEach(s=>{MAIN.forEach(([id])=>{if(s.ex[id]&&!s.deload){const b=Math.max(0,...s.ex[id].sets.filter(x=>x.k!=='warm').map(x=>e1(x.w,x.r)));if(b>0){if(!first[id])first[id]=b;last[id]=b}}});const ids=Object.keys(first);if(ids.length)out.push({l:'Økt '+s.n,y:Math.round(ids.reduce((a,id)=>a+last[id]/first[id],0)/ids.length*1000)/10})});return out}
 function lineChart(id,pts,color){const el=document.getElementById(id);if(!el||typeof Chart==='undefined')return;const tc=(getComputedStyle(document.documentElement).getPropertyValue('--text-secondary')||'').trim()||'#888';
@@ -194,6 +225,7 @@ h+=`<div class="cd"><div class="li" style="border-top:none;padding:0"><div><div>
 const ls=liftSeries(ui.lift),ix=indexSeries();
 h+='<div class="cd"><div style="font-weight:500;margin-bottom:8px">Fremgang</div><div class="g2" style="margin-bottom:10px">'+MAIN.map(([id,n])=>`<button data-a="lift" data-v="${id}" class="${ui.lift===id?'on':''}">${n}</button>`).join('')+'</div>'+(ls.length?'<div class="mu">Estimert 1RM (kg)</div><div style="position:relative;height:180px;margin:6px 0 14px"><canvas id="c1"></canvas></div>':'<div class="mu" style="padding:8px 0 4px">Fullfør en økt med denne øvelsen for å se grafen.</div>')+(ix.length?'<div class="mu">Total styrkeindeks (start = 100)</div><div style="position:relative;height:140px;margin-top:6px"><canvas id="c2"></canvas></div>':'')+'</div>';
 if(S.sessions.length)h+='<div class="cd"><div style="font-weight:500;margin-bottom:4px">Historikk</div>'+S.sessions.slice(-5).reverse().map(s=>{const dt=new Date(s.date);return `<div class="li"><span>Økt ${s.n} <span class="mu">· Dag ${s.day+1} · ${dt.getDate()}.${dt.getMonth()+1}.</span></span><span class="mu">${(s.vol/1000).toFixed(1).replace('.',',')} t · ${s.met}/${s.tot}</span></div>`}).join('')+'</div>';
+h+=syncHTML();
 h+=`<div class="cd" id="backup"><div style="font-weight:500">Sikkerhetskopi</div><div class="mu" style="margin-bottom:10px">${lastBackupTxt()}</div>
 <div class="g2"><button data-a="dl"><i class="ti ti-download"></i> Last ned backup</button><button data-a="pick"><i class="ti ti-upload"></i> Gjenopprett</button></div>
 <input id="fileIn" type="file" accept=".json,application/json,text/plain" style="display:none">
@@ -210,7 +242,15 @@ return `<div class="cd"><div class="r sb"><div><div class="mu">Blokk ${S.block.n
 <div class="bar" style="margin:10px 0 8px"><div style="width:${W.over?100:pct}%"></div></div><div class="mu">${info}</div>
 ${W.over?'<button class="pr" data-a="newBlock" style="margin-top:12px">Start ny blokk</button>':''}
 <div class="r sb" style="margin-top:10px;border-top:0.5px solid var(--border);padding-top:8px"><span class="mu">Feil uke?</span><div class="r" style="gap:6px"><button data-a="wkm" aria-label="En uke tilbake" style="height:32px;padding:0 10px">− 1 uke</button><button data-a="wkp" aria-label="En uke fram" style="height:32px;padding:0 10px">+ 1 uke</button></div></div></div>`}
-function lastBackupTxt(){const n=sinceBackup();if(!S.backup.date)return S.sessions.length?'Ingen backup tatt ennå. Lagre en fil i Filer eller på Drive.':'Lagre en fil i Filer eller på Drive når du har logget noen økter.';const d=new Date(S.backup.date);return 'Siste backup '+d.getDate()+'.'+(d.getMonth()+1)+'. · '+(n<=0?'ingen nye økter siden':n+(n===1?' økt':' økter')+' siden')}
+function syncHTML(){const key=syncKey(),s=S.sync,t=s.at?new Date(s.at):null,two=n=>String(n).padStart(2,'0'),hm=t?t.getDate()+'.'+(t.getMonth()+1)+'. kl. '+two(t.getHours())+':'+two(t.getMinutes()):'';
+const err=s.err?'<div style="color:var(--text-danger);font-size:13px;margin-top:8px">'+esc(s.err)+'</div>':'';
+if(!key)return `<div class="cd" id="sync"><div style="font-weight:500">Synk med sky</div><div class="mu" style="margin-bottom:10px">Lagrer loggen på serveren din, så den ikke forsvinner og finnes på alle enhetene dine.</div><input id="syncKey" type="password" autocomplete="current-password" placeholder="Synk-nøkkel" style="width:100%;height:44px;margin-bottom:8px"><button class="pr" data-a="syncOn">Koble til</button>${err}</div>`;
+const wait=s.linked?S.sessions.filter(x=>!x.sy).length:0;
+return `<div class="cd" id="sync"><div class="r sb"><div style="font-weight:500">Synk med sky</div><span class="ch">${ui.syncing?'Synker …':s.err?'Feil':'På'}</span></div>
+<div class="mu" style="margin-top:4px">${s.at?'Sist synket '+hm+(s.total!=null?' · '+s.total+' økter i skyen':''):'Ikke synket ennå'}${wait?' · '+wait+(wait===1?' økt venter':' økter venter'):''}</div>
+${ui.syncMsg?'<div style="color:var(--text-success);font-size:13px;margin-top:8px"><i class="ti ti-check"></i> '+ui.syncMsg+'</div>':''}${err}
+<div class="g2" style="margin-top:10px"><button data-a="syncNow"${ui.syncing?' disabled':''}><i class="ti ti-refresh"></i> Synk nå</button><button data-a="syncOff">Koble fra</button></div></div>`}
+function lastBackupTxt(){if(syncKey()&&S.sync.at&&!S.sync.err)return 'Loggen synkes til skyen. En backup-fil er en ekstra sikring.';const n=sinceBackup();if(!S.backup.date)return S.sessions.length?'Ingen backup tatt ennå. Lagre en fil i Filer eller på Drive.':'Lagre en fil i Filer eller på Drive når du har logget noen økter.';const d=new Date(S.backup.date);return 'Siste backup '+d.getDate()+'.'+(d.getMonth()+1)+'. · '+(n<=0?'ingen nye økter siden':n+(n===1?' økt':' økter')+' siden')}
 function backupJSON(){return JSON.stringify({v:2,app:'styrke',date:new Date().toISOString(),settings:S.settings,nextDay:S.nextDay,block:S.block,sessions:S.sessions})}
 function markBackup(){S.backup={n:S.sessions.length,date:new Date().toISOString()};ui.msg='Backup lagret';save();render()}
 async function downloadBackup(){const name='styrke-backup-'+new Date().toISOString().slice(0,10)+'.json',file=new File([backupJSON()],name,{type:'application/json'});
@@ -220,7 +260,7 @@ const url=URL.createObjectURL(file),a=document.createElement('a');a.href=url;a.d
 function readBackup(text){try{const o=JSON.parse(text);if(!o||!Array.isArray(o.sessions))throw 0;ui.pending=o;ui.ioErr=''}catch(e){ui.pending=null;ui.ioErr='Ugyldig backup. Velg en hel backup-fil eller lim inn hele teksten.'}render()}
 function applyBackup(){const o=ui.pending;if(!o)return;S.sessions=o.sessions;if(o.settings)S.settings=o.settings;if(typeof o.nextDay==='number')S.nextDay=o.nextDay;
 S.block=o.block&&typeof o.block.start==='number'?Object.assign({n:1,adj:0},o.block):detectBlock();S.backup={n:S.sessions.length,date:o.date||new Date().toISOString()};
-ui.pending=null;ui.io=null;ui.sel=S.nextDay;ui.msg='Gjenopprettet '+S.sessions.length+' økter';save()}
+S.sessions.forEach(s=>delete s.sy);ui.pending=null;ui.io=null;ui.sel=S.nextDay;ui.msg='Gjenopprettet '+S.sessions.length+' økter';save();syncNow()}
 function finHTML(){const A=S.active,F=A.fin,done=F.el>=540,D=P[A.day];
 return `<div class="cd"><div class="mu">Avslutning · ${D.fin}</div><div style="font-size:18px;font-weight:500;margin-bottom:12px">6 × 30 sek hardt / 60 sek rolig</div>`+(done?'<div style="text-align:center;padding:1.5rem 0"><i class="ti ti-flame" style="font-size:24px;color:var(--text-success)"></i><div style="font-size:18px;font-weight:500;margin-top:6px">Intervaller ferdig</div></div><button class="pr" data-a="finDone">Fullfør økt</button>':`<div id="finBox" style="text-align:center;padding:1.25rem 0;border-radius:12px;background:var(--surface-1);margin-bottom:10px"><div id="finP" style="font-size:18px;font-weight:500">Hardt</div><div id="finT" style="font-size:44px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.2">0:30</div><div id="finR" class="mu">Runde 1 av 6</div></div><div class="bar" style="margin-bottom:12px"><div id="finBar" style="width:0%"></div></div><button class="pr" data-a="finT">${F.run?'Pause':(F.el>0?'Fortsett':'Start intervaller')}</button><button data-a="finSkip" style="width:100%;margin-top:8px">Hopp over og fullfør</button>`)+'</div>'}
 function workHTML(){const A=S.active,D=P[A.day];
@@ -266,7 +306,7 @@ const bx=document.getElementById('finBox'),p=document.getElementById('finP'),t=d
 if(p){p.textContent=hard?'Hardt':'Rolig';p.style.color=hard?'var(--text-danger)':'var(--text-success)'}if(t)t.textContent=mmss(rem);if(r)r.textContent='Runde '+(rd+1)+' av 6';if(b)b.style.width=(e/540*100)+'%';if(bx)bx.style.background=(F.run||F.el>0)?(hard?'var(--bg-danger)':'var(--bg-success)'):'var(--surface-1)';
 if(F.run&&ph!==lastPh){if(lastPh!==-2)beep(hard?1200:660,220,hard?2:1);lastPh=ph}}}
 setInterval(tick,250);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){wake();tick()}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){wake();tick();if(!S.sync.at||Date.now()-Date.parse(S.sync.at)>300000)syncNow()}});
 root.addEventListener('input',e=>{if(!draft)return;if(e.target.id==='wIn'){draft.w=e.target.value}if(e.target.id==='rIn'){draft.r=e.target.value}});
 root.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||!root.contains(b))return;unlock();act(b.dataset.a,b.dataset.v)});
 root.addEventListener('change',e=>{if(e.target.id!=='fileIn'||!e.target.files||!e.target.files[0])return;const fr=new FileReader();fr.onload=()=>readBackup(String(fr.result));fr.onerror=()=>{ui.ioErr='Kunne ikke lese fila.';render()};fr.readAsText(e.target.files[0])});
@@ -285,6 +325,10 @@ case 'dl':downloadBackup();return;
 case 'pick':{const f=document.getElementById('fileIn');if(f){f.value='';f.click()}return}
 case 'impOk':applyBackup();break;
 case 'impNo':ui.pending=null;break;
+case 'syncOn':{const el=document.getElementById('syncKey'),v=el?el.value.trim():'';if(v.length<16){S.sync.err='Nøkkelen må være minst 16 tegn.';break}
+if(!setSyncKey(v)){S.sync.err='Kunne ikke lagre nøkkelen på enheten.';break}S.sync=freshSync();ui.syncMsg='';syncNow(true);return}
+case 'syncNow':ui.syncMsg='';syncNow(true);return;
+case 'syncOff':setSyncKey('');S.sync=freshSync();ui.syncMsg='';save();break;
 case 'p125':S.settings.has125=!S.settings.has125;save();break;
 case 'lift':ui.lift=v;break;
 case 'wm':case 'wp':{const I=itemInfo(A.q[A.idx]);const st=I.d.bar?I.st:(I.d.inc||2.5);const cur=num(draft.w)||0;draft.w=fmt(Math.max(0,Math.round((cur+(a==='wp'?st:-st))*100)/100));ui.err='';break}
@@ -307,7 +351,7 @@ case 'copy':{const t=document.getElementById('ioT');try{navigator.clipboard.writ
 case 'doImp':{const t=document.getElementById('ioT');readBackup(t?t.value:'');return}
 }
 render()}
-render();
+render();setTimeout(()=>syncNow(),600);window.addEventListener('online',()=>syncNow());
 </script>
 </body>
 </html>

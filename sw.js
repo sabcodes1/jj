@@ -1,6 +1,6 @@
 // Service worker: gjør appen tilgjengelig uten nett.
 // Bytt CACHE-navnet når filene endres, så gamle kopier ryddes bort.
-const CACHE = 'styrke-v4';
+const CACHE = 'styrke-v5';
 const LOCAL = ['./', './index.html', './manifest.json', './icon-180.png', './icon-192.png', './icon-512.png'];
 const CDN = [
   'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js',
@@ -30,6 +30,8 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+  // Synk-API-et skal aldri caches.
+  if (url.pathname.includes('/api/')) return;
 
   // Egne filer: prøv nettet først (så oppdateringer kommer fram), ellers bruk lagret kopi.
   if (url.origin === self.location.origin) {

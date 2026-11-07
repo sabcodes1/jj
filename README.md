@@ -31,3 +31,16 @@ Loggen lagres bare på enheten. Trykk **Last ned backup** jevnlig (på mobil: ve
 Appen kan legges til på Hjem-skjermen og virker uten nett etter første åpning (`sw.js` lagrer filene). Når du endrer filer, bytt `CACHE`-navnet i `sw.js` så telefonen henter den nye versjonen.
 
 Appen viser «Innsats» for hvert sett (RIR og om du skal kjøre LLP). Logghistorikken fra det gamle programmet beholdes; øvelser med samme navn (benk, pull-ups, skrå manualpress, roing, RDL, bulgarsk utfall) fortsetter progresjonen derfra.
+
+## Synk med sky (Cloudflare)
+
+Appen kan lagre loggen i en Cloudflare D1-database, så den finnes på alle enheter og ikke forsvinner med telefonen.
+
+- `functions/api/sync.js` – API-et (Cloudflare Pages Function). Krever D1-binding `DB` og hemmeligheten `SYNC_KEY`.
+- `build.sh` – kopierer appfilene til `dist/` ved deploy.
+
+Oppsett i Cloudflare Pages: Build command `bash build.sh`, Build output directory `dist`. Tabellene opprettes automatisk ved første synk.
+
+I appen: **Synk med sky → lim inn synk-nøkkelen → Koble til.** Appen synker når den åpnes, etter hver økt og når nettet kommer tilbake. Økter slås sammen mellom enheter; ingenting slettes.
+
+Lokal test: `bash build.sh && echo 'SYNC_KEY=en-lang-testnokkel-123' > .dev.vars && npx wrangler pages dev dist --d1 DB=styrke-local`
