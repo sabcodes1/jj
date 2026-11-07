@@ -1,6 +1,6 @@
 // Service worker: gjør appen tilgjengelig uten nett.
 // Bytt CACHE-navnet når filene endres, så gamle kopier ryddes bort.
-const CACHE = 'styrke-v3';
+const CACHE = 'styrke-v4';
 const LOCAL = ['./', './index.html', './manifest.json', './icon-180.png', './icon-192.png', './icon-512.png'];
 const CDN = [
   'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js',

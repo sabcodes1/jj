@@ -48,38 +48,40 @@ input:focus,textarea:focus{outline:none;border-color:var(--border-accent)}
 <script>
 // Program etter Jeff Nippards prinsipper: 1 beindag + 3 overkroppsdager.
 // rir:[tidligere sett, siste sett]; llp:1 = long-length partials etter failure på siste sett.
-const PROG=2;
+const PROG=3;
 const W1=[[0,10],[.6,5],[.8,3],[.9,1]];
+// Prioritet (fra nov 2026): 1 sideskuldre 12 sett/uke, 2 lats og øvre rygg 14, 3 armer (triceps 9, biceps 8), 4 bakre delts 7.
+// Vedlikehold: bryst 7 (vekt på skrå), mage 3, bein én dag.
 const P=[
-{n:'Overkropp A',f:'Bryst og sidedelts · mandag',fin:null,ex:[
-{id:'incdb',n:'Skrå manualpress 30°',t:'w',sets:3,r:[6,10],rest:150,inc:2,def:24,warm:[[.5,8],[.75,4]],rir:[2,1],alts:['Skrå Smith-press','Skrå maskinpress']},
-{id:'mchest',n:'Maskin brystpress',t:'w',sets:2,r:[8,12],rest:120,inc:5,def:60,rir:[1,0],alts:['Smith-benkpress','Flat manualpress']},
+{n:'Overkropp A',f:'Sideskuldre, triceps, øvre bryst · mandag',fin:null,ex:[
+{id:'incdb',n:'Skrå manualpress 30°',t:'w',sets:4,r:[6,10],rest:150,inc:2,def:24,warm:[[.5,8],[.75,4]],rir:[2,1],alts:['Skrå Smith-press','Skrå maskinpress']},
 {id:'csrow',n:'Brystforankret roing',t:'w',sets:3,r:[10,12],rest:120,inc:2.5,def:40,rir:[1,0],llp:1,alts:['Meadows row','Sittende kabelroing']},
-{id:'clat',n:'Kabel sidehev',t:'w',sets:3,r:[10,15],rest:75,inc:2.5,def:7.5,rir:[1,0],llp:1,note:'Kabel i håndhøyde',alts:['Lean-in manual sidehev','Sidehev-maskin']},
-{id:'ohtri',n:'Overhead kabel triceps (stang)',t:'w',sets:3,r:[10,12],rest:75,inc:2.5,def:25,rir:[1,0],alts:['Enarms manual overhead','Katana kabel triceps']}]},
-{n:'Bein',f:'Quads, hamstrings, glutes, legger · tirsdag',fin:null,ex:[
+{id:'clat',n:'Kabel sidehev',t:'w',sets:4,r:[10,15],rest:75,inc:2.5,def:7.5,rir:[1,0],llp:1,note:'Kabel i håndhøyde',alts:['Lean-in manual sidehev','Sidehev-maskin']},
+{id:'ohtri',n:'Overhead kabel triceps (stang)',t:'w',sets:3,r:[10,12],rest:75,ss:'A',inc:2.5,def:25,rir:[1,0],alts:['Enarms manual overhead','Katana kabel triceps']},
+{id:'ccurl',n:'Kabelcurl',t:'w',sets:2,r:[10,15],rest:75,ss:'A',inc:2.5,def:15,rir:[1,0],alts:['Preacher curl','Stangcurl']},
+{id:'face',n:'Face pulls',t:'w',sets:2,r:[12,15],rest:60,inc:2.5,def:20,rir:[1,0],note:'Trekk mot pannen, albuer høyt',alts:['Reverse pec deck','Reverse kabel crossover']}]},
+{n:'Bein',f:'Vedlikehold: quads, hamstrings, legger, mage · tirsdag',fin:null,ex:[
 {id:'hack',n:'Hack squat',t:'w',sets:3,r:[6,10],rest:180,inc:5,def:80,warm:[[.4,8],[.7,4],[.85,2]],rir:[2,1],note:'Ikke til failure',alts:['Smith-knebøy','Knebøy','45° beinpress']},
 {id:'rdl',n:'Rumensk markløft',t:'w',sets:3,r:[8,10],rest:150,bar:1,def:70,warm:[[.6,5]],rir:[2,2],alts:['Hantel-RDL','Smith-RDL']},
 {id:'slc',n:'Sittende leg curl',t:'w',sets:3,r:[6,10],rest:105,inc:2.5,def:45,rir:[1,0],llp:1,alts:['Liggende leg curl','Nordic curl']},
 {id:'lext',n:'Leg extension',t:'w',sets:3,r:[10,15],rest:90,inc:2.5,def:50,rir:[1,0],llp:1,alts:['Sissy squat','Reverse nordic']},
-{id:'bulg',n:'Bulgarsk utfall (per bein)',t:'w',sets:2,r:[8,12],rest:90,inc:2,def:16,rir:[2,1],alts:['Gående utfall','Smith split squat']},
-{id:'calf',n:'Stående leggløft',t:'w',sets:3,r:[8,12],rest:60,inc:5,def:60,rir:[1,0],note:'2 sek pause nederst i strekk',alts:['Tåhev i beinpress','Sittende tåhev']}]},
-{n:'Overkropp B',f:'Rygg, bakre delts, biceps · torsdag',fin:null,ex:[
+{id:'calf',n:'Stående leggløft',t:'w',sets:3,r:[8,12],rest:60,inc:5,def:60,rir:[1,0],note:'2 sek pause nederst i strekk',alts:['Tåhev i beinpress','Sittende tåhev']},
+{id:'ccr',n:'Kabel crunch',t:'w',sets:3,r:[10,15],rest:60,inc:2.5,def:30,rir:[2,1],alts:['Hengende beinhev','Ab wheel']}]},
+{n:'Overkropp B',f:'Lats, øvre rygg, bakre delts, armer · torsdag',fin:null,ex:[
 {id:'pdown',n:'Nedtrekk, bredt grep',t:'w',sets:3,r:[8,12],rest:120,inc:5,def:55,warm:[[.5,8]],rir:[1,0],llp:1,alts:['Nedtrekk nøytralt grep','Enarms nedtrekk']},
-{id:'crow',n:'Sittende kabelroing',t:'w',sets:2,r:[8,12],rest:120,inc:2.5,def:50,rir:[1,0],alts:['Maskinroing','Brystforankret roing']},
-{id:'mshp',n:'Maskin skulderpress',t:'w',sets:2,r:[8,10],rest:120,inc:5,def:40,rir:[2,1],alts:['Manual-skulderpress','Smith skulderpress']},
-{id:'cfly',n:'Sittende kabelflyes',t:'w',sets:3,r:[10,15],rest:90,inc:2.5,def:15,rir:[1,0],alts:['Pec deck','Manualflyes']},
-{id:'rcross',n:'Reverse kabel crossover',t:'w',sets:3,r:[12,15],rest:60,inc:2.5,def:5,rir:[1,0],note:'Hold i kablene, ikke håndtakene',alts:['Reverse pec deck','Face pulls']},
-{id:'inccurl',n:'Skrå manualcurl',t:'w',sets:3,r:[8,12],rest:75,inc:2,def:10,rir:[1,0],alts:['Bayesian kabelcurl','Preacher curl']},
-{id:'lat',n:'Lean-in manual sidehev',t:'w',sets:2,r:[12,15],rest:60,inc:1,def:8,rir:[1,0],alts:['Kabel sidehev','Sidehev-maskin']}]},
-{n:'Overkropp C',f:'Tung benk, pull-ups, armer · lørdag',fin:null,ex:[
+{id:'crow',n:'Sittende kabelroing',t:'w',sets:3,r:[8,12],rest:120,inc:2.5,def:50,rir:[1,0],llp:1,alts:['Maskinroing','Brystforankret roing']},
+{id:'lat',n:'Lean-in manual sidehev',t:'w',sets:4,r:[12,15],rest:60,ss:'B',inc:1,def:8,rir:[1,0],alts:['Kabel sidehev','Sidehev-maskin']},
+{id:'rcross',n:'Reverse kabel crossover',t:'w',sets:3,r:[12,15],rest:60,ss:'B',inc:2.5,def:5,rir:[1,0],note:'Hold i kablene, ikke håndtakene',alts:['Reverse pec deck','Face pulls']},
+{id:'inccurl',n:'Skrå manualcurl',t:'w',sets:3,r:[8,12],rest:75,ss:'A',inc:2,def:10,rir:[1,0],alts:['Bayesian kabelcurl','Preacher curl']},
+{id:'tri',n:'Triceps pushdown (tau)',t:'w',sets:3,r:[10,15],rest:75,ss:'A',inc:2.5,def:25,rir:[1,0],alts:['Pushdown med stang','Dips-maskin']}]},
+{n:'Overkropp C',f:'Tung benk, pull-ups, skuldre, armer · lørdag',fin:null,ex:[
 {id:'bench',n:'Benkpress',t:'top',top:[5,6],bo:2,boR:[8,10],rest:180,bar:1,def:60,warm:W1,rir:[2,1],alts:['Manualpress flat','Smith-benkpress','Chest press-maskin']},
 {id:'pull',n:'Pull-ups',t:'w',sets:3,r:[6,10],rest:150,add:1,inc:2.5,def:0,warm:[[-1,5]],rir:[1,0],llp:1,note:'Legg på vekt når du klarer 10',alts:['Nedtrekk nøytralt grep','Assistert pull-up']},
-{id:'yraise',n:'Kabel Y-hev',t:'w',sets:3,r:[12,15],rest:60,inc:2.5,def:5,rir:[1,0],alts:['Kabel sidehev','Lean-in manual sidehev']},
+{id:'oarow',n:'Enarms kabelroing',t:'w',sets:2,r:[10,12],rest:90,inc:2.5,def:20,rir:[1,0],llp:1,note:'Per arm. Trekk albuen mot hofta',alts:['Hantelroing','Enarms maskinroing']},
+{id:'yraise',n:'Kabel Y-hev',t:'w',sets:4,r:[12,15],rest:60,inc:2.5,def:5,rir:[1,0],alts:['Kabel sidehev','Lean-in manual sidehev']},
 {id:'bcurl',n:'Bayesian kabelcurl',t:'w',sets:3,r:[10,15],rest:90,ss:'A',inc:2.5,def:10,rir:[1,0],note:'Arm bak kroppen',alts:['Kabelcurl','Skrå manualcurl']},
 {id:'katana',n:'Katana kabel triceps',t:'w',sets:3,r:[10,15],rest:90,ss:'A',inc:2.5,def:10,rir:[1,0],alts:['Overhead kabel triceps','Skullcrushers']},
-{id:'rpec',n:'Reverse pec deck, sideveis',t:'w',sets:2,r:[12,15],rest:60,inc:2.5,def:25,rir:[1,0],alts:['Reverse kabel crossover','Face pulls']},
-{id:'ccr',n:'Kabel crunch',t:'w',sets:3,r:[10,15],rest:60,inc:2.5,def:30,rir:[2,1],alts:['Hengende beinhev','Ab wheel']}]}
+{id:'rpec',n:'Reverse pec deck, sideveis',t:'w',sets:2,r:[12,15],rest:60,inc:2.5,def:25,rir:[1,0],alts:['Reverse kabel crossover','Face pulls']}]}
 ];
 const MAIN=[['bench','Benk'],['hack','Hack squat'],['pull','Pull-ups'],['incdb','Skrå manual']];
 const ALL={};P.forEach(d=>d.ex.forEach(e=>ALL[e.id]=e));
@@ -88,7 +90,8 @@ function load(){try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):nul
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){noStore=true}}
 let S=load()||{settings:{has125:true},nextDay:0,sessions:[],active:null,prog:PROG};
 // Nytt program: start på dag 1 og forkast en påbegynt økt fra det gamle programmet. Historikken beholdes.
-if(S.prog!==PROG){S.prog=PROG;S.nextDay=0;S.active=null;save()}
+// Programbytte: forkast en påbegynt økt. Fra program 2 beholdes dagrekkefølgen (samme fire dager), ellers start på dag 1.
+if(S.prog!==PROG){if(!(S.prog>=2))S.nextDay=0;S.prog=PROG;S.active=null;save()}
 // Blokk = 12 uker à 4 økter. Den starter ved første økt som bruker en øvelse fra det nye programmet.
 const OLD_IDS=new Set(['bench','pull','incdb','csrow','squat','rdl','bulg','hlr','ohp','dips','crow','lat','face','bic','tri','dl','lp','lc','calf']);
 function detectBlock(){const i=S.sessions.findIndex(s=>Object.keys(s.ex||{}).some(k=>!OLD_IDS.has(k.split('|')[0])));return{n:1,start:i<0?S.sessions.length:i,adj:0}}

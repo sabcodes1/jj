@@ -8,10 +8,12 @@ Bygget på Jeff Nippards prinsipper: få, harde sett, siste sett til failure (RI
 
 | Dag | Økt | Fokus |
 | --- | --- | --- |
-| Mandag | Overkropp A | Bryst, sidedelts, triceps + brystforankret roing |
-| Tirsdag | Bein | Hack squat, RDL, leg curl, leg extension, bulgarsk utfall, leggløft |
-| Torsdag | Overkropp B | Rygg, bakre delts, biceps + kabelflyes og skulderpress |
-| Lørdag | Overkropp C | Tung benk, pull-ups, Y-hev, armer (supersett), mage |
+| Mandag | Overkropp A | Sideskuldre, triceps, øvre bryst + brystforankret roing |
+| Tirsdag | Bein | Vedlikehold: hack squat, RDL, leg curl, leg extension, leggløft, mage |
+| Torsdag | Overkropp B | Lats, øvre rygg, bakre delts, armer (supersett) |
+| Lørdag | Overkropp C | Tung benk, pull-ups, enarms roing, Y-hev, armer, bakre delts |
+
+Prioritet (harde sett per uke): sideskuldre 12, lats/øvre rygg 14, triceps 9, biceps 8, bakre delts 7. Vedlikehold: bryst 7 (vekt på skrå), mage 3, bein én dag.
 
 12-ukers blokk – appen teller ukene selv (4 økter = 1 uke):
 
