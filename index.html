@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.40.0/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.40.0/dist/tabler-icons.min.css" integrity="sha384-Z6HhRiDILhsIDpAj+JPBeQKqW8do2cyJxq3LKeb4L6Yzr3PxnqVVqZAwqvGnmJvs" crossorigin="anonymous">
 <style>
 :root{--surface-0:#f5f4ef;--surface-1:#ecebe5;--surface-2:#fff;--border:rgba(0,0,0,.1);--border-strong:rgba(0,0,0,.2);--border-accent:#85B7EB;--text-primary:#141413;--text-secondary:#5f5e5a;--text-muted:#9a9893;--text-accent:#185FA5;--text-success:#3B6D11;--text-danger:#A32D2D;--text-warning:#854F0B;--bg-accent:#E6F1FB;--bg-danger:#FCEBEB;--bg-success:#EAF3DE;--fill-accent:#185FA5;--on-accent:#fff;--radius:8px;--font-mono:ui-monospace,Menlo,monospace}
 @media (prefers-color-scheme:dark){:root{--surface-0:#1a1a19;--surface-1:#262624;--surface-2:#30302e;--border:rgba(255,255,255,.12);--border-strong:rgba(255,255,255,.24);--border-accent:#378ADD;--text-primary:#f5f4ef;--text-secondary:#b4b2a9;--text-muted:#888780;--text-accent:#85B7EB;--text-success:#97C459;--text-danger:#F09595;--text-warning:#EF9F27;--bg-accent:#0C447C;--bg-danger:#501313;--bg-success:#173404;--fill-accent:#378ADD}}
@@ -44,7 +44,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--border-accent)}
 <h1 style="font-size:22px;font-weight:500;margin:4px 0 12px">Styrke</h1>
 <div id="app"></div>
 </main>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" integrity="sha384-dug+JxfBvklEQdJ4AYuBBAIScUz0bVN73xpy273gcAwHjb3qI0fXmuYNaNfdyYJG" crossorigin="anonymous"></script>
 <script>
 // Program etter Jeff Nippards prinsipper: 1 beindag + 3 overkroppsdager.
 // rir:[tidligere sett, siste sett]; llp:1 = long-length partials etter failure på siste sett.
@@ -135,13 +135,15 @@ S.sync.linked=true;S.sync.at=new Date().toISOString();S.sync.err='';S.sync.total
 if(manual||added)ui.syncMsg=added?'Hentet '+added+(added===1?' økt':' økter')+' fra skyen':'Alt er synket';
 }catch(e){S.sync.err=e&&e.message?e.message:'Kunne ikke synke'}
 syncing=false;ui.syncing=false;save();if(!S.active||manual)render()}
-let ui={view:S.active?'work':'home',sel:S.nextDay,lift:'bench',alts:false,editT:false,err:'',io:null,ioErr:'',copied:false,sum:null,cf:'',msg:'',pending:null,syncing:false,syncMsg:''};
+let ui={view:S.active?'work':'home',sel:S.nextDay,lift:'bench',alts:false,editT:false,err:'',io:null,ioErr:'',copied:false,sum:null,cf:'',msg:'',pending:null,syncing:false,syncMsg:'',bwOk:false};
 let draft=null,beeped=true,lastPh=-2,charts=[],ac=null,wl=null;
 const fmt=n=>n==null||isNaN(n)?'–':String(Math.round(n*100)/100).replace('.',',');
 const num=v=>{if(v==null||v==='')return null;const x=parseFloat(String(v).replace(',','.'));return isNaN(x)?null:x};
 const mmss=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
 const rt=r=>r[0]===r[1]?String(r[0]):r[0]+'–'+r[1];
 const e1=(w,r)=>w>0&&r>0?w*(1+r/30):0;
+// Øvelser med «add» (pull-ups) løfter kroppsvekt + ekstra vekt. Økta husker kroppsvekten den dagen (s.bw), eldre økter bruker dagens.
+function eff(key,x,s){const d=ALL[key];return (x.w||0)+(d&&d.add?((s&&s.bw)||S.settings.bw||0):0)}
 const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const dl=(n,d)=>d?Math.max(1,Math.round(n*.5)):n;
 function stepFor(d){return d.bar?(S.settings.has125?2.5:5):(d.inc||2.5)}
@@ -155,17 +157,18 @@ function isMiss(d,sets){if(d.t==='top'){const s=sets.find(x=>x.k==='top');return
 function effort(it,d){if(it.k==='warm')return 'Lett og raskt';const A=S.active;if(A&&A.deload)return 'RIR 3, ingen LLP';if(A&&A.intro)return 'RIR 2–3, ingen LLP (introuke)';
 const R=d.rir||[2,1],last=it.k==='top'||(it.k==='work'&&it.i===it.n-1),r=last?R[1]:R[0];
 return 'RIR '+r+(r===0?' (failure)':'')+(last&&d.llp?' + LLP':'')}
+// Vekten øker bare når alle planlagte sett er tatt og alle når toppen av rep-intervallet.
 function computeTarget(key,deload){
 const d=defOf(key),st=stepFor(d),inc=d.bar?st:(d.inc||2.5),h=hist(key),R=d.t==='top'?d.top:d.r;
 let T={w:d.bw?0:d.def,goal:R[0],status:'new',note:d.def==null?'Velg vekt for '+d.n:'Første gang: juster vekten',prev:[]};
-if(h.length){const sets=h[0].ex[key].sets;T.prev=sets;let ref,up;
+if(h.length){const sets=h[0].ex[key].sets;T.prev=sets;let ref,up,few=false;
 if(d.t==='top'){ref=sets.find(x=>x.k==='top')||sets.find(x=>x.k!=='warm');up=ref.k==='top'&&ref.r>=R[1]&&(ref.rpe||8)<=8}
-else{const ws=sets.filter(x=>x.k==='work');if(ws.length){ref=ws[0];up=ws.every(x=>x.r>=R[1])}else{ref=sets.find(x=>x.k!=='warm');up=false}}
+else{const ws=sets.filter(x=>x.k==='work');if(ws.length){ref=ws[0];few=ws.length<d.sets;up=!few&&ws.every(x=>x.r>=R[1])}else{ref=sets.find(x=>x.k!=='warm');up=false}}
 const w=ref.w,miss=isMiss(d,sets);
 if(d.bw){T.w=0;if(up){T.status='up';T.goal=R[1];T.note='Toppen nådd: prøv tyngre variant'}else{T.status='hold';T.goal=null;T.note='Én rep mer per sett'}}
 else if(up){T.w=rnd(w+inc,st);T.status='up';T.goal=R[0];T.note='Ny vekt: +'+fmt(inc)+' kg'}
 else if(miss){const pm=h[1]&&isMiss(d,h[1].ex[key].sets);if(pm){T.w=rnd(w*.95,st);T.status='down';T.note='To bom på rad: ned 5 %'}else{T.w=w;T.status='miss';T.note='Bom sist: samme vekt'}T.goal=R[0]}
-else{T.w=w;T.status='hold';T.goal=d.t==='top'?Math.min(R[1],ref.r+1):null;T.note=d.t==='top'&&(ref.rpe||8)>=9?'RPE 9 sist: samme vekt':'Samme vekt, én rep mer'}}
+else{T.w=w;T.status='hold';T.goal=d.t==='top'?Math.min(R[1],ref.r+1):null;T.note=d.t==='top'&&(ref.rpe||8)>=9?'RPE 9 sist: samme vekt':few?'Ikke alle sett sist: samme vekt':'Samme vekt, én rep mer'}}
 if(deload&&T.w!=null){T.w=rnd(T.w*.9,st);T.goal=R[0];T.status='deload';T.note='Deload: lett uke'}
 return T}
 function buildQueue(day,deload){const ex=P[day].ex,q=[];let i=0;
@@ -196,21 +199,21 @@ function afterSets(){const A=S.active;if(P[A.day].fin){A.phase='fin';A.fin={el:0
 function complete(){const A=S.active,it=A.q[A.idx],I=itemInfo(it);const w=I.d.bw?0:num(draft.w);
 if(!I.d.bw&&(w==null||w<0)){ui.err='Skriv inn vekt først';render();return}
 const r=parseInt(draft.r);if(!(r>=0)){ui.err='Skriv inn antall reps';render();return}
-ui.err='';(A.logs[I.key]=A.logs[I.key]||[]).push({k:it.k,i:it.i,w,r,rpe:it.k==='warm'?null:draft.rpe,goal:it.k==='warm'?null:I.goal});
+ui.err='';A.last={idx:A.idx,key:I.key};(A.logs[I.key]=A.logs[I.key]||[]).push({k:it.k,i:it.i,w,r,rpe:it.k==='warm'?null:draft.rpe,goal:it.k==='warm'?null:I.goal});
 A.idx++;draft=null;ui.alts=false;ui.editT=false;
 if(it.rest>0&&A.idx<A.q.length){A.restEnd=Date.now()+it.rest*1000;A.restTot=it.rest;beeped=false}else A.restEnd=0;
 save();if(A.idx>=A.q.length){afterSets();if(!S.active)return}render()}
 function sub(alt){const A=S.active,it=A.q[A.idx];A.subs[it.ex]=alt;const key=it.ex+'|'+alt;if(!A.targets[key])A.targets[key]=computeTarget(key,A.deload);A.q=A.q.filter((x,j)=>!(j>=A.idx&&x.ex===it.ex&&x.k==='warm'));draft=null;ui.alts=false;save()}
 function finish(){const A=S.active;if(!A)return;const dur=Math.max(1,Math.round((Date.now()-A.start)/60000)),ex={};let vol=0,met=0,tot=0;const changes=[],prs=[];
 Object.keys(A.logs).forEach(key=>{const sets=A.logs[key];if(!sets.length)return;const d=defOf(key);ex[key]={name:d.n,sets:sets.map(x=>({k:x.k,i:x.i,w:x.w,r:x.r,rpe:x.rpe,goal:x.goal}))};
-const g=sets.filter(x=>x.k!=='warm');if(!g.length)return;g.forEach(x=>vol+=(x.w||0)*x.r);tot++;if(g.every(x=>x.goal==null||x.r>=x.goal))met++;
+const g=sets.filter(x=>x.k!=='warm');if(!g.length)return;g.forEach(x=>vol+=eff(key,x)*x.r);tot++;if(g.every(x=>x.goal==null||x.r>=x.goal))met++;
 const T=A.targets[key],p=(T&&T.prev||[]).find(x=>x.k===g[0].k&&x.i===g[0].i);
 if(p&&!A.deload){const dw=(g[0].w||0)-(p.w||0);if(Math.abs(dw)>.01)changes.push({t:d.n+': '+(dw>0?'+':'')+fmt(dw)+' kg',up:dw>0});else if(g[0].r!==p.r){const dr=g[0].r-p.r;changes.push({t:d.n+': '+(dr>0?'+':'')+dr+(Math.abs(dr)===1?' rep':' reps'),up:dr>0})}}
-const best=Math.max(0,...g.map(x=>e1(x.w,x.r)));if(best>0){const pb=Math.max(0,...S.sessions.filter(s=>s.ex[key]).flatMap(s=>s.ex[key].sets.filter(x=>x.k!=='warm').map(x=>e1(x.w,x.r))));if(pb>0&&best>pb+.01)prs.push(d.n+': e1RM '+fmt(Math.round(best*2)/2)+' kg')}});
-const rec={n:S.sessions.length+1,day:A.day,date:new Date().toISOString(),dur,deload:A.deload,intro:!!A.intro,week:A.week,ex,vol,met,tot,changes,prs};
-if(tot>0){S.sessions.push(rec);S.nextDay=(A.day+1)%4}S.active=null;draft=null;ui.sum=rec;ui.sel=S.nextDay;ui.view=tot>0?'sum':'home';save();if(wl){try{wl.release()}catch(e){}}render();syncNow()}
-function liftSeries(id){return S.sessions.filter(s=>s.ex[id]&&s.ex[id].sets.some(x=>x.k!=='warm')).map(s=>({l:'Økt '+s.n,y:Math.round(Math.max(0,...s.ex[id].sets.filter(x=>x.k!=='warm').map(x=>e1(x.w,x.r)))*2)/2}))}
-function indexSeries(){const first={},last={},out=[];S.sessions.forEach(s=>{MAIN.forEach(([id])=>{if(s.ex[id]&&!s.deload){const b=Math.max(0,...s.ex[id].sets.filter(x=>x.k!=='warm').map(x=>e1(x.w,x.r)));if(b>0){if(!first[id])first[id]=b;last[id]=b}}});const ids=Object.keys(first);if(ids.length)out.push({l:'Økt '+s.n,y:Math.round(ids.reduce((a,id)=>a+last[id]/first[id],0)/ids.length*1000)/10})});return out}
+const best=Math.max(0,...g.map(x=>e1(eff(key,x),x.r)));if(best>0){const pb=Math.max(0,...S.sessions.filter(s=>s.ex[key]).flatMap(s=>s.ex[key].sets.filter(x=>x.k!=='warm').map(x=>e1(eff(key,x,s),x.r))));if(pb>0&&best>pb+.01)prs.push(d.n+': e1RM '+fmt(Math.round(best*2)/2)+' kg')}});
+const rec={n:S.sessions.length+1,day:A.day,date:new Date().toISOString(),dur,bw:S.settings.bw||null,deload:A.deload,intro:!!A.intro,week:A.week,ex,vol,met,tot,changes,prs};
+if(tot>0){S.sessions.push(rec);S.nextDay=(A.day+1)%P.length}S.active=null;draft=null;ui.sum=rec;ui.sel=S.nextDay;ui.view=tot>0?'sum':'home';save();if(wl){try{wl.release()}catch(e){}}render();syncNow()}
+function liftSeries(id){return S.sessions.filter(s=>s.ex[id]&&s.ex[id].sets.some(x=>x.k!=='warm')).map(s=>({l:'Økt '+s.n,y:Math.round(Math.max(0,...s.ex[id].sets.filter(x=>x.k!=='warm').map(x=>e1(eff(id,x,s),x.r)))*2)/2}))}
+function indexSeries(){const first={},last={},out=[];S.sessions.forEach(s=>{MAIN.forEach(([id])=>{if(s.ex[id]&&!s.deload){const b=Math.max(0,...s.ex[id].sets.filter(x=>x.k!=='warm').map(x=>e1(eff(id,x,s),x.r)));if(b>0){if(!first[id])first[id]=b;last[id]=b}}});const ids=Object.keys(first);if(ids.length)out.push({l:'Økt '+s.n,y:Math.round(ids.reduce((a,id)=>a+last[id]/first[id],0)/ids.length*1000)/10})});return out}
 function lineChart(id,pts,color){const el=document.getElementById(id);if(!el||typeof Chart==='undefined')return;const tc=(getComputedStyle(document.documentElement).getPropertyValue('--text-secondary')||'').trim()||'#888';
 charts.push(new Chart(el,{type:'line',data:{labels:pts.map(p=>p.l),datasets:[{data:pts.map(p=>p.y),borderColor:color,backgroundColor:color,pointRadius:3,tension:.3,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,maxTicksLimit:5,font:{size:11}},grid:{display:false}},y:{ticks:{color:tc,font:{size:11}},grid:{color:'rgba(128,128,128,0.15)'}}}}}))}
 function drawCharts(){charts.forEach(c=>c.destroy());charts=[];lineChart('c1',liftSeries(ui.lift),'#378ADD');lineChart('c2',indexSeries(),'#1D9E75')}
@@ -221,9 +224,9 @@ if(A)h+=`<div class="cd"><div class="mu">Økt pågår</div><div style="font-size
 h+=weekHTML(W);
 h+='<div class="g2" style="margin-bottom:12px">'+P.map((p,i)=>`<button data-a="sel" data-v="${i}" class="${i===d?'on':''}" style="height:auto;padding:8px 10px;text-align:left"><div style="font-weight:500;font-size:14px">Dag ${i+1}${i===S.nextDay?' · neste':''}</div><div style="font-size:12px;color:inherit">${p.n}</div></button>`).join('')+'</div>';
 h+=`<div class="cd"><div class="r sb"><div><div class="mu">${d===S.nextDay?'Neste økt':'Valgt økt'}</div><div style="font-size:18px;font-weight:500">${D.n}</div><div class="mu">${D.f||''}</div></div>${W.deload?'<span class="ch">Deload</span>':W.intro?'<span class="ch">Introuke</span>':''}</div><div style="margin:10px 0 14px">`+D.ex.map(e=>{const T=computeTarget(e.id,W.deload);return `<div class="li"><span style="min-width:0">${e.ss?'<span class="mu">'+e.ss+' </span>':''}${e.n}</span><span style="white-space:nowrap">${T.status==='up'||T.status==='down'||T.status==='miss'?icon(T.status)+' ':''}${wTxt(e,T.w)} × ${e.t==='top'?T.goal:rt(e.r)}</span></div>`}).join('')+(D.fin?`<div class="li"><span>Intervaller <span class="mu">· ${D.fin}</span></span><span>6 × 30/60</span></div>`:'')+'</div>'+(A?'':'<button class="pr" data-a="start"><i class="ti ti-barbell"></i> Start økt</button>')+'</div>';
-h+=`<div class="cd"><div class="li" style="border-top:none;padding:0"><div><div>1,25 kg-skiver</div><div class="mu">Av = stanga går i hopp på 5 kg</div></div><button data-a="p125" class="${S.settings.has125?'on':''}" style="min-width:64px">${S.settings.has125?'På':'Av'}</button></div></div>`;
-const ls=liftSeries(ui.lift),ix=indexSeries();
-h+='<div class="cd"><div style="font-weight:500;margin-bottom:8px">Fremgang</div><div class="g2" style="margin-bottom:10px">'+MAIN.map(([id,n])=>`<button data-a="lift" data-v="${id}" class="${ui.lift===id?'on':''}">${n}</button>`).join('')+'</div>'+(ls.length?'<div class="mu">Estimert 1RM (kg)</div><div style="position:relative;height:180px;margin:6px 0 14px"><canvas id="c1"></canvas></div>':'<div class="mu" style="padding:8px 0 4px">Fullfør en økt med denne øvelsen for å se grafen.</div>')+(ix.length?'<div class="mu">Total styrkeindeks (start = 100)</div><div style="position:relative;height:140px;margin-top:6px"><canvas id="c2"></canvas></div>':'')+'</div>';
+h+=`<div class="cd"><div class="li" style="border-top:none;padding:0"><div><div>1,25 kg-skiver</div><div class="mu">Av = stanga går i hopp på 5 kg</div></div><button data-a="p125" class="${S.settings.has125?'on':''}" style="min-width:64px">${S.settings.has125?'På':'Av'}</button></div><div class="li" style="margin-top:10px;padding-bottom:0"><div><div>Kroppsvekt (kg)</div><div class="mu">Legges til på pull-ups i grafer, rekorder og volum</div></div><div class="r" style="gap:6px;flex:none"><input id="bwIn" inputmode="decimal" aria-label="Kroppsvekt i kg" value="${S.settings.bw?fmt(S.settings.bw):''}" placeholder="kg" style="width:68px;height:40px;text-align:center"><button data-a="bwSet">${ui.bwOk?'Lagret':'Lagre'}</button></div></div></div>`;
+const ls=liftSeries(ui.lift),ix=indexSeries(),needBw=ALL[ui.lift].add&&!S.settings.bw;
+h+='<div class="cd"><div style="font-weight:500;margin-bottom:8px">Fremgang</div><div class="g2" style="margin-bottom:10px">'+MAIN.map(([id,n])=>`<button data-a="lift" data-v="${id}" class="${ui.lift===id?'on':''}">${n}</button>`).join('')+'</div>'+(needBw?'<div class="mu" style="padding:8px 0 4px">Legg inn kroppsvekt over for å se grafen. Pull-ups regnes som kroppsvekt + ekstra vekt.</div>':ls.length?'<div class="mu">Estimert 1RM (kg'+(ALL[ui.lift].add?', inkl. kroppsvekt':'')+')</div><div style="position:relative;height:180px;margin:6px 0 14px"><canvas id="c1"></canvas></div>':'<div class="mu" style="padding:8px 0 4px">Fullfør en økt med denne øvelsen for å se grafen.</div>')+(ix.length?'<div class="mu">Total styrkeindeks (start = 100)</div><div style="position:relative;height:140px;margin-top:6px"><canvas id="c2"></canvas></div>':'')+'</div>';
 if(S.sessions.length)h+='<div class="cd"><div style="font-weight:500;margin-bottom:4px">Historikk</div>'+S.sessions.slice(-5).reverse().map(s=>{const dt=new Date(s.date);return `<div class="li"><span>Økt ${s.n} <span class="mu">· Dag ${s.day+1} · ${dt.getDate()}.${dt.getMonth()+1}.</span></span><span class="mu">${(s.vol/1000).toFixed(1).replace('.',',')} t · ${s.met}/${s.tot}</span></div>`}).join('')+'</div>';
 h+=syncHTML();
 h+=`<div class="cd" id="backup"><div style="font-weight:500">Sikkerhetskopi</div><div class="mu" style="margin-bottom:10px">${lastBackupTxt()}</div>
@@ -281,6 +284,7 @@ ${it.k!=='warm'?'<div class="mu" style="margin:12px 0 4px">RPE <span style="colo
 ${ui.err?'<div style="color:var(--text-danger);font-size:13px;margin-top:8px">'+ui.err+'</div>':''}
 <button class="pr" data-a="done" style="margin-top:14px"><i class="ti ti-check"></i> Fullført sett</button>
 <div class="g2" style="margin-top:8px"><button data-a="alts"><i class="ti ti-replace"></i> Utstyr opptatt</button><button data-a="skip">Hopp over sett</button></div>
+${A.last?'<button data-a="undo" style="width:100%;margin-top:8px"><i class="ti ti-arrow-back-up"></i> Angre forrige sett</button>':''}
 ${ui.alts?'<div style="margin-top:10px"><div class="mu" style="margin-bottom:6px">Velg alternativ med samme mål</div>'+ALL[it.ex].alts.map(a=>`<button data-a="alt" data-v="${a}" style="width:100%;margin-bottom:6px;text-align:left">${a}</button>`).join('')+'</div>':''}</div>`;
 const up=A.q.slice(A.idx+1,A.idx+4);
 if(up.length)h+='<div class="cd"><div class="mu" style="margin-bottom:4px">Deretter</div>'+up.map(x=>{const J=itemInfo(x);return `<div class="li"><span style="min-width:0">${J.name} <span class="mu">· ${J.label}</span></span><span style="white-space:nowrap">${wTxt(J.d,J.w)} × ${x.k==='warm'?x.reps:rt(J.range)}</span></div>`}).join('')+'</div>';
@@ -310,7 +314,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 root.addEventListener('input',e=>{if(!draft)return;if(e.target.id==='wIn'){draft.w=e.target.value}if(e.target.id==='rIn'){draft.r=e.target.value}});
 root.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||!root.contains(b))return;unlock();act(b.dataset.a,b.dataset.v)});
 root.addEventListener('change',e=>{if(e.target.id!=='fileIn'||!e.target.files||!e.target.files[0])return;const fr=new FileReader();fr.onload=()=>readBackup(String(fr.result));fr.onerror=()=>{ui.ioErr='Kunne ikke lese fila.';render()};fr.readAsText(e.target.files[0])});
-function act(a,v){const A=S.active;if(['discard','end','disc2'].includes(a)&&ui.cf!==a){ui.cf=a;render();return}ui.cf='';ui.msg='';if(!['doImp','impOk','impNo','pick'].includes(a))ui.ioErr='';
+function act(a,v){const A=S.active;if(['discard','end','disc2'].includes(a)&&ui.cf!==a){ui.cf=a;render();return}ui.cf='';ui.msg='';ui.bwOk=false;if(!['doImp','impOk','impNo','pick'].includes(a))ui.ioErr='';
 switch(a){
 case 'sel':ui.sel=+v;break;
 case 'start':start(ui.sel);return;
@@ -330,16 +334,19 @@ if(!setSyncKey(v)){S.sync.err='Kunne ikke lagre nøkkelen på enheten.';break}S.
 case 'syncNow':ui.syncMsg='';syncNow(true);return;
 case 'syncOff':setSyncKey('');S.sync=freshSync();ui.syncMsg='';save();break;
 case 'p125':S.settings.has125=!S.settings.has125;save();break;
+case 'bwSet':{const el=document.getElementById('bwIn'),v=num(el?el.value:'');if(v==null){delete S.settings.bw;ui.bwOk=true}else if(v>=30&&v<=300){S.settings.bw=Math.round(v*10)/10;ui.bwOk=true}save();break}
 case 'lift':ui.lift=v;break;
 case 'wm':case 'wp':{const I=itemInfo(A.q[A.idx]);const st=I.d.bar?I.st:(I.d.inc||2.5);const cur=num(draft.w)||0;draft.w=fmt(Math.max(0,Math.round((cur+(a==='wp'?st:-st))*100)/100));ui.err='';break}
 case 'rm':case 'rp':draft.r=String(Math.max(0,(parseInt(draft.r)||0)+(a==='rp'?1:-1)));ui.err='';break;
 case 'rpe':draft.rpe=draft.rpe===+v?null:+v;break;
 case 'done':complete();return;
-case 'skip':A.idx++;draft=null;ui.alts=false;ui.editT=false;save();if(A.idx>=A.q.length){afterSets();if(!S.active)return}break;
+case 'skip':A.last={idx:A.idx,key:null};A.idx++;draft=null;ui.alts=false;ui.editT=false;save();if(A.idx>=A.q.length){afterSets();if(!S.active)return}break;
+// Angre: gå tilbake til forrige sett. Var det logget, hentes verdiene inn igjen så de kan rettes.
+case 'undo':{const L=A.last;if(!L)break;A.idx=L.idx;A.restEnd=0;draft=null;if(L.key){const x=(A.logs[L.key]||[]).pop();if(x)draft={idx:A.idx,w:fmt(x.w),r:String(x.r),rpe:x.rpe||null}}A.last=null;ui.alts=false;ui.editT=false;ui.err='';save();break}
 case 'alts':ui.alts=!ui.alts;break;
 case 'alt':sub(v);break;
-case 'rm15':A.restEnd-=15000;break;
-case 'rp30':A.restEnd+=30000;A.restTot+=30;beeped=false;break;
+case 'rm15':A.restEnd-=15000;save();break;
+case 'rp30':A.restEnd+=30000;A.restTot+=30;beeped=false;save();break;
 case 'rskip':A.restEnd=0;save();break;
 case 'editT':ui.editT=!ui.editT;break;
 case 'setT':{const val=num((document.getElementById('tIn')||{}).value);if(val!=null&&val>=0){const k=keyOf(A.q[A.idx].ex);A.targets[k].w=val;A.targets[k].note='Mål justert manuelt';draft=null;ui.editT=false;save()}break}

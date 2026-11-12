@@ -30,6 +30,14 @@ Loggen lagres bare på enheten. Trykk **Last ned backup** jevnlig (på mobil: ve
 
 Appen kan legges til på Hjem-skjermen og virker uten nett etter første åpning (`sw.js` lagrer filene). Når du endrer filer, bytt `CACHE`-navnet i `sw.js` så telefonen henter den nye versjonen.
 
+Med svakt nett venter appen maks 2,5 sekunder før den åpner den lagrede kopien. Chart.js og ikonene hentes fra CDN med låst versjon og hash (`integrity`). Bytter du versjon, må hashen i `index.html` regnes ut på nytt.
+
+## Kroppsvekt og angring
+
+- **Kroppsvekt:** legg inn kroppsvekten på forsiden. Pull-ups regnes da som kroppsvekt + ekstra vekt i grafen, rekordene og volumet.
+- **Angre forrige sett:** henter tilbake det siste settet under en økt, så du kan rette vekt eller reps. Virker ikke etter at økta er fullført.
+- Vekten øker bare når du har tatt alle planlagte sett og alle når toppen av rep-intervallet.
+
 Appen viser «Innsats» for hvert sett (RIR og om du skal kjøre LLP). Logghistorikken fra det gamle programmet beholdes; øvelser med samme navn (benk, pull-ups, skrå manualpress, roing, RDL, bulgarsk utfall) fortsetter progresjonen derfra.
 
 ## Synk med sky (Cloudflare)

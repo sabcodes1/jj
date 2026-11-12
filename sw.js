@@ -1,6 +1,7 @@
 // Service worker: gjør appen tilgjengelig uten nett.
 // Bytt CACHE-navnet når filene endres, så gamle kopier ryddes bort.
-const CACHE = 'styrke-v5';
+const CACHE = 'styrke-v6';
+const NET_WAIT = 2500; // ms å vente på nettet før lagret kopi brukes
 const LOCAL = ['./', './index.html', './manifest.json', './icon-180.png', './icon-192.png', './icon-512.png'];
 const CDN = [
   'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js',
@@ -33,20 +34,24 @@ self.addEventListener('fetch', e => {
   // Synk-API-et skal aldri caches.
   if (url.pathname.includes('/api/')) return;
 
-  // Egne filer: prøv nettet først (så oppdateringer kommer fram), ellers bruk lagret kopi.
+  // Egne filer: prøv nettet først (så oppdateringer kommer fram), men vent ikke lenger enn NET_WAIT.
+  // Med svakt nett vises lagret kopi med en gang, og den nye versjonen lagres i bakgrunnen til neste åpning.
   if (url.origin === self.location.origin) {
-    e.respondWith((async () => {
-      try {
-        const res = await fetch(req);
-        if (res.ok) {
-          const c = await caches.open(CACHE);
-          c.put(req.mode === 'navigate' ? './index.html' : req, res.clone());
-        }
-        return res;
-      } catch (err) {
-        const hit = await caches.match(req, { ignoreSearch: true }) || (req.mode === 'navigate' && await caches.match('./index.html'));
-        return hit || Response.error();
+    const net = (async () => {
+      const res = await fetch(req);
+      if (res.ok) {
+        const c = await caches.open(CACHE);
+        await c.put(req.mode === 'navigate' ? './index.html' : req, res.clone());
       }
+      return res;
+    })();
+    e.waitUntil(net.catch(() => {}));
+    e.respondWith((async () => {
+      const hit = await caches.match(req, { ignoreSearch: true }) || (req.mode === 'navigate' && await caches.match('./index.html')) || null;
+      if (!hit) return net.catch(() => Response.error());
+      const late = new Promise(done => setTimeout(() => done(null), NET_WAIT));
+      const res = await Promise.race([net.catch(() => null), late]);
+      return res && res.ok ? res : hit;
     })());
     return;
   }
@@ -57,7 +62,8 @@ self.addEventListener('fetch', e => {
       const hit = await caches.match(req);
       if (hit) return hit;
       const res = await fetch(req);
-      if (res.ok || res.type === 'opaque') {
+      // Bare CORS-svar lagres: siden sjekker filene mot en hash (SRI), og det går ikke med «opaque» svar.
+      if (res.ok) {
         const c = await caches.open(CACHE);
         c.put(req, res.clone());
       }
